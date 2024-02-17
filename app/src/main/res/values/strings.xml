@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">passengerApp</string>
+    <string name="accessToken">pk.eyJ1Ijoicml6OTkiLCJhIjoiY2xyaXFiY3pqMDBiajJqbWs5bXo3dnJoOSJ9.G2vXRvEGKKmSGGgb12hyhQ</string>
+    <string-array name="gender_array">
+        <item>Male</item>
+        <item>Female</item>
+    </string-array>
+</resources>

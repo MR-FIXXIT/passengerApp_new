@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    tools:context=".student.SVDoc">
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:padding="20dp">
+
+
+
+        <TextView
+            android:id="@+id/tvDesc1_SVDoc"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Upload Documents"
+            android:textSize="27sp"
+            android:textStyle="bold"/>
+
+        <TextView
+            android:id="@+id/tvDesc2_SVDoc"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="These documents would be submitted for verification"
+            android:textSize="17sp"
+            android:layout_marginTop="10dp"/>
+
+        <TextView
+            android:id="@+id/tvPhotoDesc1_SVDoc"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Passport Size Photo"
+            android:layout_marginTop="40dp"
+            android:textSize="24sp"
+            android:textStyle="bold"/>
+
+        <TextView
+            android:id="@+id/tvPhotoDesc2_SVDoc"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Passport like face photo - clear, straight and centered"
+            android:textSize="17sp"
+            android:layout_marginTop="10dp"/>
+
+        <androidx.appcompat.widget.AppCompatImageButton
+            android:id="@+id/btnPhoto_SVDoc"
+            android:layout_width="100dp"
+            android:layout_height="100dp"
+            android:layout_marginTop="20dp"
+            android:background="@drawable/spinner_border"
+            android:src="@drawable/upload_photo_icon" />
+
+        <TextView
+            android:id="@+id/tvIDDesc1_SVDoc"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Student ID"
+            android:layout_marginTop="40dp"
+            android:textSize="24sp"
+            android:textStyle="bold"/>
+
+        <TextView
+            android:id="@+id/tvIDDesc2_SVDoc"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Official student ID card issued by your college / school"
+            android:textSize="17sp"
+            android:layout_marginTop="10dp"/>
+
+        <androidx.appcompat.widget.AppCompatImageButton
+            android:id="@+id/btnID_SVDoc"
+            android:background="@drawable/spinner_border"
+            android:layout_width="100dp"
+            android:layout_marginTop="20dp"
+            android:layout_height="100dp"
+            android:src="@drawable/upload_photo_icon" />
+
+        <TextView
+            android:id="@+id/tvDOBPDesc1_SVDoc"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Date of Birth Proof"
+            android:layout_marginTop="40dp"
+            android:textSize="24sp"
+            android:textStyle="bold"/>
+
+        <TextView
+            android:id="@+id/tvDOBPDesc2_SVDoc"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Passport like face photo - clear, straight and centered"
+            android:textSize="17sp"
+            android:layout_marginTop="10dp"/>
+
+        <androidx.appcompat.widget.AppCompatImageButton
+            android:id="@+id/btnDOBP_SVDoc"
+            android:background="@drawable/spinner_border"
+            android:layout_marginTop="20dp"
+            android:layout_width="100dp"
+            android:layout_height="100dp"
+            android:src="@drawable/upload_photo_icon" />
+
+        <Button
+            android:id="@+id/btnUpload_SVDoc"
+            android:layout_width="match_parent"
+            android:enabled="false"
+            android:layout_height="48dp"
+            android:layout_marginTop="90dp"
+            android:background="#FD7C00"
+            android:textStyle="bold"
+            android:textColor="@color/white"
+            android:text="Next" />
+
+    </LinearLayout>
+
+</ScrollView>
+

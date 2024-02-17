@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    tools:context=".student.StudentVerf"
+    android:orientation="vertical"
+    android:padding="20dp">
+
+    <TextView
+        android:id="@+id/tvDesc1_StudentVerf"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Enter Your Details"
+        android:textSize="27sp"
+        android:textStyle="bold"/>
+
+    <TextView
+        android:id="@+id/tvDesc2_StudentVerf"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Enter details that match any of your government photo ID card eg. Aadhaar Card"
+        android:textSize="17sp"
+        android:layout_marginTop="10dp"/>
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/nameLayout_StudentVerf"
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:layout_marginTop="30dp">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/etName_StudentVerf"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:hint="Full name"/>
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <androidx.appcompat.widget.AppCompatSpinner
+        android:id="@+id/spnrGender_StudentVerf"
+        android:layout_width="match_parent"
+        android:layout_height="57dp"
+        android:layout_marginTop="30dp"
+        android:background="@drawable/spinner_border"
+        />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="25dp"
+        android:orientation="horizontal">
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/dobLayout_StudentVerf"
+        android:layout_width="320dp"
+        android:layout_height="60dp">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/etDOB_StudentVerf"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:enabled="false"
+            android:hint="Date of Birth"
+            android:textColor="@color/black"/>
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <ImageButton
+        android:id="@+id/ibCalendar_StudentVerf"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginTop="4dp"
+        android:src="@drawable/baseline_calendar_month_24"
+        android:background="?android:attr/colorBackground"/>
+    </LinearLayout>
+
+    <Button
+        android:id="@+id/btnToStuDoc_StudentVerf"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:layout_marginTop="290dp"
+        android:background="#FD7C00"
+        android:textStyle="bold"
+        android:textColor="@color/white"
+        android:text="Next"
+        android:enabled="false"/>
+
+
+
+</LinearLayout>
