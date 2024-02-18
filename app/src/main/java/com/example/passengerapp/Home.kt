@@ -15,14 +15,16 @@ class Home : AppCompatActivity() {
     private lateinit var btnAddStop: Button
     private lateinit var btnViewStop: Button
     private lateinit var btnStuPass: Button
+    private lateinit var btnBuyTicket: Button
 
     private fun init(){
         auth = FirebaseAuth.getInstance()
-        btnSignOut = findViewById(R.id.btnSignOut)
-        btnDisplayMap = findViewById(R.id.btnDisplayMap)
-        btnAddStop = findViewById(R.id.btnAddStop)
-        btnViewStop = findViewById(R.id.btnViewStop)
-        btnStuPass = findViewById(R.id.btnSV)
+        btnSignOut = findViewById(R.id.btnSignOut_home)
+        btnDisplayMap = findViewById(R.id.btnDisplayMap_home)
+        btnAddStop = findViewById(R.id.btnAddStop_home)
+        btnViewStop = findViewById(R.id.btnViewStop_home)
+        btnStuPass = findViewById(R.id.btnSV_home)
+        btnBuyTicket = findViewById(R.id.btnBuyTicket_home)
     }
 
 
@@ -38,10 +40,8 @@ class Home : AppCompatActivity() {
         }
 
         btnDisplayMap.setOnClickListener{
-            val intent = Intent(this@Home, Map::class.java)
-            startActivity(intent)
+            startActivity(Intent(this@Home, Map::class.java))
         }
-
 
         btnAddStop.setOnClickListener{
             startActivity(Intent(this@Home, AddStops::class.java))
@@ -54,6 +54,11 @@ class Home : AppCompatActivity() {
         btnStuPass.setOnClickListener{
             startActivity(Intent(this@Home, StudentVerf::class.java))
         }
+
+        btnBuyTicket.setOnClickListener{
+            startActivity(Intent(this@Home, StudentVerf::class.java))
+        }
+
 
 
     }

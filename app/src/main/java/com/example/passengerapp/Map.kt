@@ -1,6 +1,7 @@
 package com.example.passengerapp
 
 import android.Manifest
+import android.animation.ValueAnimator
 import android.annotation.SuppressLint
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -8,12 +9,14 @@ import android.graphics.Color
 import android.os.Bundle
 import android.util.Log
 import android.view.View
+import android.view.animation.LinearInterpolator
 import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.res.ResourcesCompat
+import androidx.lifecycle.ReportFragment.Companion.reportFragment
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.gson.JsonObject
 import com.mapbox.android.core.permissions.PermissionsListener
@@ -28,6 +31,8 @@ import com.mapbox.geojson.FeatureCollection
 import com.mapbox.geojson.LineString
 import com.mapbox.geojson.Point
 import com.mapbox.mapboxsdk.Mapbox
+import com.mapbox.mapboxsdk.annotations.Marker
+import com.mapbox.mapboxsdk.annotations.MarkerOptions
 import com.mapbox.mapboxsdk.camera.CameraPosition
 import com.mapbox.mapboxsdk.camera.CameraUpdateFactory
 import com.mapbox.mapboxsdk.geometry.LatLng
@@ -59,6 +64,7 @@ class Map : AppCompatActivity(), OnMapReadyCallback,
     private lateinit var db: FirebaseFirestore
     private lateinit var fabUserLocation: View
     private lateinit var fabLocationSearch: View
+    private lateinit var fabShowBus: View
     private lateinit var btnDisplayRoute: Button
     private lateinit var tvDistance: TextView
     private lateinit var tvS: TextView
@@ -79,6 +85,11 @@ class Map : AppCompatActivity(), OnMapReadyCallback,
     private var st: String? = null
     var startLocation: String? = ""
     var endLocation: String? = ""
+    private var bus: Marker? = null
+    private lateinit var busLoc: LatLng
+    private lateinit var firestore: FirebaseFirestore
+    private var previousLocation: LatLng? = null
+    private var currentLocation: LatLng? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -92,128 +103,6 @@ class Map : AppCompatActivity(), OnMapReadyCallback,
         mapView.getMapAsync(this)
     }
 
-    private fun init(){
-        mapView = findViewById<View>(R.id.mapView) as MapView
-        fabUserLocation = findViewById(R.id.fabUserLocation)
-        fabLocationSearch = findViewById(R.id.fabLocationSearch)
-        tvDistance = findViewById(R.id.distanceView)
-        tvS = findViewById(R.id.tvS)
-        tvD = findViewById(R.id.tvD)
-        db = FirebaseFirestore.getInstance()
-        stopId = mutableListOf()
-        stops = mutableListOf()
-    }
-    private fun moveToUserLoc() {
-        // Check if mapboxMap and locationComponent are not null
-        fabUserLocation.setOnClickListener {
-            val lastLocation = mapboxMap.locationComponent.lastKnownLocation
-            if (lastLocation != null) {
-                val position: CameraPosition = CameraPosition.Builder()
-                    .target(LatLng(lastLocation.latitude, lastLocation.longitude))
-                    .zoom(14.0)
-                    .tilt(13.0)
-                    .build()
-                mapboxMap.animateCamera(CameraUpdateFactory.newCameraPosition(position), 1000)
-            }
-        }
-    }
-
-    private fun fetchRoute(){
-        btnDisplayRoute.setOnClickListener {
-            getStopId{
-                getStop{
-                    drawRoute(stops[0], stops[1])
-                }
-            }
-        }
-    }
-
-    @SuppressLint("LogNotTimber")
-    private fun getStop(callback: () -> Unit){
-
-        val stop = mutableListOf<Point>()
-
-        for (documentId in stopId) {
-            db.collection("Stop").document(documentId).get()
-                .addOnCompleteListener { task ->
-                    if (task.isSuccessful) {
-                        val snapshot = task.result
-
-                        // Check if the document exists
-                        if (snapshot.exists()) {
-
-                            // Extract data for each stop
-                            val lat = snapshot.getString("lat")!!.toDouble()
-                            val long = snapshot.getString("long")!!.toDouble()
-
-                            val stopData = Point.fromLngLat(lat, long)
-
-                            stop.add(stopData)
-
-                            // Now stopsData list contains the latitude and longitude for each stop
-
-                        } else {
-                            Log.e("stop", "Document $documentId does not exist.")
-                        }
-                    } else {
-                        // Handle errors
-                        Log.e("stop", "Error getting document $documentId:", task.exception)
-
-                        Toast.makeText(this, "Error getting stops: ${task.exception?.message}", Toast.LENGTH_SHORT).show()
-                    }
-
-                    if (stopId.indexOf(documentId) == stopId.size - 1) {
-                        stops = stop
-                        callback.invoke() // Callback to indicate that the Firestore query is complete
-                    }
-                }
-                .addOnFailureListener {
-                    Log.e("stop", "Firestore query failed:", it)
-
-                    Toast.makeText(this@Map, "Oops....something went wrong", Toast.LENGTH_SHORT).show()
-                }
-        }
-    }
-
-    @SuppressLint("LogNotTimber")
-    private fun getStopId(callback: () -> Unit) {
-        db.collection("Route").get()
-            .addOnSuccessListener { querySnapshot ->
-                if (!querySnapshot.isEmpty) {
-                    for (documentSnapshot in querySnapshot.documents) {
-                        val routeData = documentSnapshot.data
-                        val id = mutableListOf<String>()
-
-                        // Extract stops from the routeData map
-                        for (i in 1..routeData!!.size) {
-                            val stopKey = "stop$i"
-                            val stop = routeData[stopKey] as String
-                            id.add(stop)
-                        }
-
-                        stopId = id
-                    }
-                } else {
-                    // No documents found
-                }
-
-                Log.d("stop", "Route: $stopId")
-                callback.invoke() // Callback to indicate that the Firestore query is complete
-            }
-    }
-
-    private fun drawRoute(origin: Point, destination: Point) {
-        client = MapboxDirections.builder()
-            .origin(origin)
-            .destination(destination)
-            .overview(DirectionsCriteria.OVERVIEW_FULL)
-            .profile(DirectionsCriteria.PROFILE_DRIVING)
-            .accessToken(resources.getString(R.string.accessToken))
-            .build()
-
-        client?.enqueueCall(this)
-    }
-
     override fun onMapReady(mapboxMap: MapboxMap) {
         this.mapboxMap = mapboxMap
         mapboxMap.setStyle(
@@ -223,7 +112,10 @@ class Map : AppCompatActivity(), OnMapReadyCallback,
             initSearchFab()
             moveToUserLoc()
             addUserLocations()
-            fetchRoute()
+            showBusLoc()
+            getBusLoc()
+//            fetchRoute()
+
 
             val drawable = ResourcesCompat.getDrawable(
                 resources, R.drawable.ic_baseline_location_on_24, null
@@ -275,6 +167,206 @@ class Map : AppCompatActivity(), OnMapReadyCallback,
 //            })
         }
     }
+
+    private fun init(){
+        mapView = findViewById<View>(R.id.mapView) as MapView
+        fabUserLocation = findViewById(R.id.fabUserLocation)
+        fabLocationSearch = findViewById(R.id.fabLocationSearch)
+        fabShowBus = findViewById(R.id.fabShowBus)
+        tvDistance = findViewById(R.id.distanceView)
+        tvS = findViewById(R.id.tvS)
+        tvD = findViewById(R.id.tvD)
+        db = FirebaseFirestore.getInstance()
+        stopId = mutableListOf()
+        stops = mutableListOf()
+        firestore = FirebaseFirestore.getInstance()
+    }
+    private fun moveToUserLoc() {
+        // Check if mapboxMap and locationComponent are not null
+        fabUserLocation.setOnClickListener {
+            val lastLocation = mapboxMap.locationComponent.lastKnownLocation
+            if (lastLocation != null) {
+                val position: CameraPosition = CameraPosition.Builder()
+                    .target(LatLng(lastLocation.latitude, lastLocation.longitude))
+                    .zoom(14.0)
+                    .tilt(13.0)
+                    .build()
+                mapboxMap.animateCamera(CameraUpdateFactory.newCameraPosition(position), 1000)
+            }
+        }
+    }
+
+    private fun showBusLoc(){
+
+        fabShowBus.setOnClickListener{
+
+        }
+
+    }
+
+    private fun updateMarkerPosition(location: LatLng) {
+        if (bus == null) {
+            // Add marker if it doesn't exist
+            val markerOptions = MarkerOptions()
+                .position(location)
+                .title("Bus Location")
+            bus = mapboxMap.addMarker(markerOptions)
+        } else {
+            // Update marker position
+            updateMarkerPositionWithAnimation(location)
+        }
+    }
+
+    private fun getBusLoc(){
+        firestore.collection("userLocations").document("your_document_id_here")
+            .addSnapshotListener{ snapshot, exception ->
+                if (exception != null) {
+                    // Handle any errors that occurred while listening for changes
+                    Log.e("Firestore", "Listen failed", exception)
+                    return@addSnapshotListener
+                }
+
+                if (snapshot != null && snapshot.exists()) {
+
+                    val lat = snapshot.getDouble("latitude")
+                    val long = snapshot.getDouble("longitude")
+
+                    if(lat != null && long != null){
+                        busLoc = LatLng(lat, long)
+                        updateMarkerPosition(busLoc)
+                        Log.i("my_tag", "lat: $lat long: $long")
+                    }else {
+                        Log.e("Firestore", "One or both fields are missing")
+                    }
+                } else {
+                    Log.d("Firestore", "Current data: null")
+                }
+            }
+    }
+
+
+    private fun updateMarkerPositionWithAnimation(newLocation: LatLng) {
+        Log.i("my_tag", "marker update fun called")
+
+        previousLocation = currentLocation
+        currentLocation = newLocation
+        Log.i("my_tag", "previous location: $previousLocation")
+        Log.i("my_tag", "current location: $currentLocation")
+
+        previousLocation?.let { prevLocation ->
+            val interpolator = LinearInterpolator()
+            val valueAnimator = ValueAnimator.ofFloat(0f, 1f)
+            valueAnimator.duration = 1000 // Animation duration in milliseconds
+            valueAnimator.addUpdateListener { animator ->
+                val fraction = animator.animatedFraction
+                val lat = (currentLocation!!.latitude - prevLocation.latitude) * fraction + prevLocation.latitude
+                val lng = (currentLocation!!.longitude - prevLocation.longitude) * fraction + prevLocation.longitude
+                val animatedPosition = LatLng(lat, lng)
+                bus?.position = animatedPosition
+                mapboxMap.updateMarker(bus!!)
+            }
+            valueAnimator.interpolator = interpolator
+            valueAnimator.start()
+        }
+    }
+
+//    private fun fetchRoute(){
+////        btnDisplayRoute.setOnClickListener {
+////            getStopId{
+////                getStop{
+////                    drawRoute(stops[0], stops[1])
+////                }
+////            }
+////        }
+//    }
+
+//    @SuppressLint("LogNotTimber")
+//    private fun getStop(callback: () -> Unit){
+//
+//        val stop = mutableListOf<Point>()
+//
+//        for (documentId in stopId) {
+//            db.collection("Stop").document(documentId).get()
+//                .addOnCompleteListener { task ->
+//                    if (task.isSuccessful) {
+//                        val snapshot = task.result
+//
+//                        // Check if the document exists
+//                        if (snapshot.exists()) {
+//
+//                            // Extract data for each stop
+//                            val lat = snapshot.getString("lat")!!.toDouble()
+//                            val long = snapshot.getString("long")!!.toDouble()
+//
+//                            val stopData = Point.fromLngLat(lat, long)
+//
+//                            stop.add(stopData)
+//
+//                            // Now stopsData list contains the latitude and longitude for each stop
+//
+//                        } else {
+//                            Log.e("stop", "Document $documentId does not exist.")
+//                        }
+//                    } else {
+//                        // Handle errors
+//                        Log.e("stop", "Error getting document $documentId:", task.exception)
+//
+//                        Toast.makeText(this, "Error getting stops: ${task.exception?.message}", Toast.LENGTH_SHORT).show()
+//                    }
+//
+//                    if (stopId.indexOf(documentId) == stopId.size - 1) {
+//                        stops = stop
+//                        callback.invoke() // Callback to indicate that the Firestore query is complete
+//                    }
+//                }
+//                .addOnFailureListener {
+//                    Log.e("stop", "Firestore query failed:", it)
+//
+//                    Toast.makeText(this@Map, "Oops....something went wrong", Toast.LENGTH_SHORT).show()
+//                }
+//        }
+//    }
+
+//    @SuppressLint("LogNotTimber")
+//    private fun getStopId(callback: () -> Unit) {
+//        db.collection("Route").get()
+//            .addOnSuccessListener { querySnapshot ->
+//                if (!querySnapshot.isEmpty) {
+//                    for (documentSnapshot in querySnapshot.documents) {
+//                        val routeData = documentSnapshot.data
+//                        val id = mutableListOf<String>()
+//
+//                        // Extract stops from the routeData map
+//                        for (i in 1..routeData!!.size) {
+//                            val stopKey = "stop$i"
+//                            val stop = routeData[stopKey] as String
+//                            id.add(stop)
+//                        }
+//
+//                        stopId = id
+//                    }
+//                } else {
+//                    // No documents found
+//                }
+//
+//                Log.d("stop", "Route: $stopId")
+//                callback.invoke() // Callback to indicate that the Firestore query is complete
+//            }
+//    }
+
+//    private fun drawRoute(origin: Point, destination: Point) {
+//        client = MapboxDirections.builder()
+//            .origin(origin)
+//            .destination(destination)
+//            .overview(DirectionsCriteria.OVERVIEW_FULL)
+//            .profile(DirectionsCriteria.PROFILE_DRIVING)
+//            .accessToken(resources.getString(R.string.accessToken))
+//            .build()
+//
+//        client?.enqueueCall(this)
+//    }
+
+
 
 //    private fun reverseGeocodeFunc(point: LatLng, c: Int) {
 //        val reverseGeocode = MapboxGeocoding.builder()

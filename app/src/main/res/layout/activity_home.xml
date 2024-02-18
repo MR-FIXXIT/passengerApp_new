@@ -7,56 +7,68 @@
     tools:context=".Home">
 
     <Button
-        android:id="@+id/btnSignOut"
+        android:id="@+id/btnSignOut_home"
         android:layout_width="200dp"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="192dp"
+        android:layout_marginBottom="112dp"
         android:text="Sign Out"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.516"
-        app:layout_constraintStart_toStartOf="parent" />
-
-    <Button
-        android:id="@+id/btnViewStop"
-        android:layout_width="200dp"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="16dp"
-        android:text="View Stop"
-        app:layout_constraintBottom_toTopOf="@+id/btnAddStop"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.516"
-        app:layout_constraintStart_toStartOf="parent" />
-
-    <Button
-        android:id="@+id/btnAddStop"
-        android:layout_width="200dp"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="16dp"
-        android:text="Add Stop"
-        app:layout_constraintBottom_toTopOf="@+id/btnDisplayMap"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.511"
         app:layout_constraintStart_toStartOf="parent" />
 
     <Button
-        android:id="@+id/btnDisplayMap"
+        android:id="@+id/btnBuyTicket_home"
         android:layout_width="200dp"
         android:layout_height="wrap_content"
         android:layout_marginBottom="16dp"
-        android:text="Map"
-        app:layout_constraintBottom_toTopOf="@+id/btnSignOut"
+        android:text="Purchase Ticket"
+        app:layout_constraintBottom_toTopOf="@id/btnSV_home"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.516"
+        app:layout_constraintStart_toStartOf="parent" />
+
+
+    <Button
+        android:id="@+id/btnViewStop_home"
+        android:layout_width="200dp"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp"
+        android:text="View Stop"
+        app:layout_constraintBottom_toTopOf="@+id/btnAddStop_home"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.516"
         app:layout_constraintStart_toStartOf="parent" />
 
     <Button
-        android:id="@+id/btnSV"
+        android:id="@+id/btnAddStop_home"
+        android:layout_width="200dp"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp"
+        android:text="Add Stop"
+        app:layout_constraintBottom_toTopOf="@+id/btnDisplayMap_home"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.511"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <Button
+        android:id="@+id/btnDisplayMap_home"
+        android:layout_width="200dp"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp"
+        android:text="Map"
+        app:layout_constraintBottom_toTopOf="@+id/btnSignOut_home"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.516"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <Button
+        android:id="@+id/btnSV_home"
         android:layout_width="200dp"
         android:layout_height="wrap_content"
         android:layout_marginBottom="16dp"
         android:text="Student Pass"
-        app:layout_constraintBottom_toTopOf="@+id/btnViewStop"
+        app:layout_constraintBottom_toTopOf="@+id/btnViewStop_home"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.516"
         app:layout_constraintStart_toStartOf="parent" />

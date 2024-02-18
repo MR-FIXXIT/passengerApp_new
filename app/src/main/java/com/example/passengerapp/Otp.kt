@@ -137,7 +137,7 @@ class Otp: AppCompatActivity() {
                     // Sign in success, update UI with the signed-in user's information
                     progressBar.visibility = View.VISIBLE
                     Toast.makeText(this@Otp, "Authentication Successful", Toast.LENGTH_SHORT).show()
-                    addToDB()
+//                    checkPhoneNumberExists(phoneNumber)
                     sendToMain()
                 } else {
                     // Sign in failed, display a message and update the UI
@@ -147,6 +147,19 @@ class Otp: AppCompatActivity() {
                     // Update UI
                 }
             }
+    }
+    private fun checkPhoneNumberExists(phoneNumber: String){
+        firestore.collection("passengers").whereEqualTo("phoneNumber", phoneNumber).get()
+            .addOnSuccessListener { documents ->
+                if (documents.isEmpty) {
+                    addToDB()
+                }
+            }
+            .addOnFailureListener { e ->
+                // Handle error
+                Toast.makeText(this, "Firestore Error: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+
     }
 
     private fun addToDB() {
@@ -162,8 +175,6 @@ class Otp: AppCompatActivity() {
             .addOnFailureListener { exception ->
                 Toast.makeText(this, "Error creating user: ${exception.message}", Toast.LENGTH_SHORT).show()
             }
-
-
     }
 
     private fun sendToMain(){

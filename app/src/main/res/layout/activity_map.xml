@@ -36,6 +36,17 @@
             app:backgroundTint="@color/colorPrimary"
             app:srcCompat="@android:drawable/ic_search_category_default" />
 
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/fabShowBus"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:tint="@android:color/white"
+            android:layout_gravity="end|bottom"
+            android:layout_marginEnd="11dp"
+            android:layout_marginBottom="150dp"
+            app:backgroundTint="@color/colorPrimary"
+            app:srcCompat="@drawable/baseline_bus_alert_24" />
+
 
         <TextView
             android:id="@+id/tvS"
