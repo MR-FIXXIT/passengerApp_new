@@ -37,6 +37,13 @@
             app:srcCompat="@android:drawable/ic_search_category_default" />
 
 
+        <Button
+            android:id="@+id/btnDisplayRoute"
+            android:text="Route"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center|bottom"/>
+
         <TextView
             android:id="@+id/tvS"
             android:layout_width="310dp"

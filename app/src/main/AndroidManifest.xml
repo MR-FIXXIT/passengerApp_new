@@ -25,6 +25,9 @@
             android:name=".Map"
             android:exported="false" />
         <activity
+            android:name=".RouteMap"
+            android:exported="false" />
+        <activity
             android:name=".AddStops"
             android:exported="false" />
         <activity

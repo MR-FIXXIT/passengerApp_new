@@ -9,6 +9,8 @@ import android.graphics.Color
 import android.os.Bundle
 import android.util.Log
 import android.view.View
+import com.mapbox.mapboxsdk.plugins.annotation.SymbolManager
+
 import android.view.animation.LinearInterpolator
 import android.widget.Button
 import android.widget.TextView
@@ -43,6 +45,7 @@ import com.mapbox.mapboxsdk.maps.MapView
 import com.mapbox.mapboxsdk.maps.MapboxMap
 import com.mapbox.mapboxsdk.maps.OnMapReadyCallback
 import com.mapbox.mapboxsdk.maps.Style
+import com.mapbox.mapboxsdk.plugins.annotation.SymbolOptions
 import com.mapbox.mapboxsdk.plugins.places.autocomplete.PlaceAutocomplete
 import com.mapbox.mapboxsdk.plugins.places.autocomplete.model.PlaceOptions
 import com.mapbox.mapboxsdk.style.layers.LineLayer
@@ -54,6 +57,8 @@ import com.mapbox.mapboxsdk.utils.BitmapUtils
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
+
+
 
 class Map : AppCompatActivity(), OnMapReadyCallback,
     Callback<DirectionsResponse?>, PermissionsListener {
@@ -91,6 +96,12 @@ class Map : AppCompatActivity(), OnMapReadyCallback,
     private lateinit var firestore: FirebaseFirestore
     private var previousLocation: LatLng? = null
     private var currentLocation: LatLng? = null
+    private val busMarkers: MutableMap<String, Marker?> = HashMap()
+    private lateinit var symbolManager: SymbolManager
+
+
+
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -113,8 +124,8 @@ class Map : AppCompatActivity(), OnMapReadyCallback,
             initSearchFab()
             moveToUserLoc()
             addUserLocations()
-            showBusLoc()
-            getBusLoc()
+//            showBusLoc()
+//            getBusLoc()
 //            fetchRoute()
 
 
@@ -173,7 +184,6 @@ class Map : AppCompatActivity(), OnMapReadyCallback,
         mapView = findViewById<View>(R.id.mapView) as MapView
         fabUserLocation = findViewById(R.id.fabUserLocation)
         fabLocationSearch = findViewById(R.id.fabLocationSearch)
-        fabShowBus = findViewById(R.id.fabShowBus)
         tvDistance = findViewById(R.id.distanceView)
         tvS = findViewById(R.id.tvS)
         tvD = findViewById(R.id.tvD)
@@ -181,6 +191,105 @@ class Map : AppCompatActivity(), OnMapReadyCallback,
         stopId = mutableListOf()
         stops = mutableListOf()
         firestore = FirebaseFirestore.getInstance()
+
+    }
+
+//    private fun retrieveBusLocations() {
+//        firestore.collection("buses").get()
+//            .addOnSuccessListener { documents ->
+//            for (document in documents) {
+//                val id = document.id // Unique identifier for the bus
+//                val lat = document.getDouble("lat") ?: 0.0
+//                val lng = document.getDouble("lng") ?: 0.0
+//
+//                val bus = Bus(id, lat, lng)
+//                updateMarker(bus)
+//            }
+//        }
+//    }
+
+//    private fun updateMarker(bus: Bus) {
+//        val existingMarker = busMarkers[bus.id]
+//        val options = SymbolOptions()
+//            .withLatLng(LatLng(bus.lat, bus.lng))
+//            .withIconImage("your-icon-image")
+//            .withIconSize(1.0F)
+//            .withTextField("Bus ${bus.id}")
+//            .withTextSize(12.0f)
+//            .withSymbolSortKey(10f)
+//            .withIconOffset(arrayOf(0f, -9f))
+//            .withDraggable(false)
+//            .withData(bus.id) // Store bus ID as data for easy retrieval
+//
+//        if (existingMarker != null) {
+//            // Update existing marker
+//            existingMarker.setLatLng(LatLng(bus.lat, bus.lng))
+//        } else {
+//            // Create new marker
+//            val newMarker = symbolManager.create(options)
+//            busMarkers[bus.id] = newMarker
+//        }
+//    }
+//    private fun updateMarkerPosition(location: LatLng, status: String?) {
+//        if (status == "inactive") {
+//            hideBusMarker()
+//            return
+//        }
+//
+//        // Show the bus marker
+//        showBusMarker(location)
+//    }
+
+//    private fun updateMarkerPosition(location: LatLng, status: String?) {
+//        if (bus == null) {
+//            val markerOptions = MarkerOptions()
+//                .position(location)
+//                .title("Bus Location")
+//            bus = mapboxMap.addMarker(markerOptions)
+//
+//        } else {
+//            updateMarkerPositionWithAnimation(location)
+//            if(status == "inactive"){
+//                bus!!.remove()
+//            }
+//        }
+//    }
+
+//    private fun showBusMarker(location: LatLng) {
+//        if (bus == null) {
+//            val markerOptions = MarkerOptions()
+//                .position(location)
+//                .title("Bus Location")
+//            bus = mapboxMap.addMarker(markerOptions)
+//        } else {
+//            updateMarkerPositionWithAnimation(location)
+//        }
+//    }
+
+    private fun showOrUpdateBusMarker(busId: String, location: LatLng) {
+        var busMarker = busMarkers[busId]
+        if (busMarker == null) {
+            // If marker doesn't exist, create a new one
+            val markerOptions = MarkerOptions()
+                .position(location)
+                .title("Bus $busId Location")
+            busMarker = mapboxMap.addMarker(markerOptions)
+            busMarkers[busId] = busMarker
+        } else {
+            // Update marker position
+            updateMarkerPositionWithAnimation(busMarker, location)
+        }
+    }
+
+//    private fun hideBusMarker() {
+//        bus?.remove()
+//        bus = null
+//    }
+
+    private fun hideBusMarker(busId: String) {
+        val busMarker = busMarkers[busId]
+        busMarker?.remove()
+        busMarkers.remove(busId)
     }
 
     private fun moveToUserLoc() {
@@ -198,243 +307,146 @@ class Map : AppCompatActivity(), OnMapReadyCallback,
         }
     }
 
-    private fun showBusLoc(){
-
-        fabShowBus.setOnClickListener{
-            toggleMarkersVisibility()
-        }
-
-    }
-
-    private fun hideMarkers() {
-        if (bus != null) {
-            bus!!.remove()
-            bus = null
-        }
-    }
-
-    private fun showMarkers() {
-        if (bus == null) getBusLoc()
-    }
-
-    private fun toggleMarkersVisibility() {
-        markersVisible = if (markersVisible) {
-            hideMarkers()
-            false
-        } else {
-            showMarkers()
-            true
-        }
-    }
-
-    private fun updateMarkerPosition(location: LatLng, status: String?) {
-        if (bus == null) {
-            val markerOptions = MarkerOptions()
-                .position(location)
-                .title("Bus Location")
-            bus = mapboxMap.addMarker(markerOptions)
-
-        } else {
-            updateMarkerPositionWithAnimation(location)
-            if(status == "inactive"){
-                bus!!.remove()
-            }
-        }
-    }
-
-    private fun getBusLoc(){
-        firestore.collection("userLocations").document("your_document_id_here")
-            .addSnapshotListener{ snapshot, exception ->
-                if (exception != null) {
-                    Log.e("Firestore", "Listen failed", exception)
-                    return@addSnapshotListener
-                }
-
-                if (snapshot != null && snapshot.exists()) {
-                    val lat = snapshot.getDouble("latitude")
-                    val long = snapshot.getDouble("longitude")
-                    val status = snapshot.getString("status")
-
-                    if(lat != null && long != null){
-                        busLoc = LatLng(lat, long)
-                        updateMarkerPosition(busLoc, status)
-                        Log.i("my_tag", "lat: $lat long: $long")
-                    }else {
-                        Log.e("Firestore", "One or both fields are missing")
-                    }
-                } else {
-                    Log.d("Firestore", "Current data: null")
-                }
-            }
-    }
-
-
-    private fun updateMarkerPositionWithAnimation(newLocation: LatLng) {
-        Log.i("my_tag", "marker update fun called")
-
-        previousLocation = currentLocation
-        currentLocation = newLocation
-        Log.i("my_tag", "previous location: $previousLocation")
-        Log.i("my_tag", "current location: $currentLocation")
-
-        previousLocation?.let { prevLocation ->
-            val interpolator = LinearInterpolator()
-            val valueAnimator = ValueAnimator.ofFloat(0f, 1f)
-            valueAnimator.duration = 1000 // Animation duration in milliseconds
-            valueAnimator.addUpdateListener { animator ->
-                val fraction = animator.animatedFraction
-                val lat = (currentLocation!!.latitude - prevLocation.latitude) * fraction + prevLocation.latitude
-                val lng = (currentLocation!!.longitude - prevLocation.longitude) * fraction + prevLocation.longitude
-                val animatedPosition = LatLng(lat, lng)
-                bus?.position = animatedPosition
-                mapboxMap.updateMarker(bus!!)
-            }
-            valueAnimator.interpolator = interpolator
-            valueAnimator.start()
-        }
-    }
-
-//    private fun fetchRoute(){
-////        btnDisplayRoute.setOnClickListener {
-////            getStopId{
-////                getStop{
-////                    drawRoute(stops[0], stops[1])
-////                }
-////            }
-////        }
+//    private fun showBusLoc(){
+//
+//        fabShowBus.setOnClickListener{
+////            toggleMarkersVisibility()
+//        }
+//
 //    }
 
-//    @SuppressLint("LogNotTimber")
-//    private fun getStop(callback: () -> Unit){
-//
-//        val stop = mutableListOf<Point>()
-//
-//        for (documentId in stopId) {
-//            db.collection("Stop").document(documentId).get()
-//                .addOnCompleteListener { task ->
-//                    if (task.isSuccessful) {
-//                        val snapshot = task.result
-//
-//                        // Check if the document exists
-//                        if (snapshot.exists()) {
-//
-//                            // Extract data for each stop
-//                            val lat = snapshot.getString("lat")!!.toDouble()
-//                            val long = snapshot.getString("long")!!.toDouble()
-//
-//                            val stopData = Point.fromLngLat(lat, long)
-//
-//                            stop.add(stopData)
-//
-//                            // Now stopsData list contains the latitude and longitude for each stop
-//
-//                        } else {
-//                            Log.e("stop", "Document $documentId does not exist.")
-//                        }
-//                    } else {
-//                        // Handle errors
-//                        Log.e("stop", "Error getting document $documentId:", task.exception)
-//
-//                        Toast.makeText(this, "Error getting stops: ${task.exception?.message}", Toast.LENGTH_SHORT).show()
-//                    }
-//
-//                    if (stopId.indexOf(documentId) == stopId.size - 1) {
-//                        stops = stop
-//                        callback.invoke() // Callback to indicate that the Firestore query is complete
-//                    }
-//                }
-//                .addOnFailureListener {
-//                    Log.e("stop", "Firestore query failed:", it)
-//
-//                    Toast.makeText(this@Map, "Oops....something went wrong", Toast.LENGTH_SHORT).show()
-//                }
+//    private fun hideMarkers() {
+//        if (bus != null) {
+//            bus!!.remove()
+//            bus = null
 //        }
 //    }
 
-//    @SuppressLint("LogNotTimber")
-//    private fun getStopId(callback: () -> Unit) {
-//        db.collection("Route").get()
-//            .addOnSuccessListener { querySnapshot ->
-//                if (!querySnapshot.isEmpty) {
-//                    for (documentSnapshot in querySnapshot.documents) {
-//                        val routeData = documentSnapshot.data
-//                        val id = mutableListOf<String>()
-//
-//                        // Extract stops from the routeData map
-//                        for (i in 1..routeData!!.size) {
-//                            val stopKey = "stop$i"
-//                            val stop = routeData[stopKey] as String
-//                            id.add(stop)
-//                        }
-//
-//                        stopId = id
-//                    }
-//                } else {
-//                    // No documents found
+//    private fun showMarkers() {
+//        if (bus == null) getBusLoc()
+//    }
+
+//    private fun toggleMarkersVisibility() {
+//        markersVisible = if (markersVisible) {
+//            hideMarkers()
+//            false
+//        } else {
+//            showMarkers()
+//            true
+//        }
+//    }
+
+
+
+//    private fun getBusLoc(){
+//        firestore.collection("userLocations").document("your_document_id_here")
+//            .addSnapshotListener{ snapshot, exception ->
+//                if (exception != null) {
+//                    Log.e("Firestore", "Listen failed", exception)
+//                    return@addSnapshotListener
 //                }
 //
-//                Log.d("stop", "Route: $stopId")
-//                callback.invoke() // Callback to indicate that the Firestore query is complete
-//            }
-//    }
-
-//    private fun drawRoute(origin: Point, destination: Point) {
-//        client = MapboxDirections.builder()
-//            .origin(origin)
-//            .destination(destination)
-//            .overview(DirectionsCriteria.OVERVIEW_FULL)
-//            .profile(DirectionsCriteria.PROFILE_DRIVING)
-//            .accessToken(resources.getString(R.string.accessToken))
-//            .build()
+//                if (snapshot != null && snapshot.exists()) {
+//                    val lat = snapshot.getDouble("latitude")
+//                    val long = snapshot.getDouble("longitude")
+//                    val status = snapshot.getString("status")
 //
-//        client?.enqueueCall(this)
-//    }
-
-
-
-//    private fun reverseGeocodeFunc(point: LatLng, c: Int) {
-//        val reverseGeocode = MapboxGeocoding.builder()
-//            .accessToken(resources.getString(R.string.accessToken))
-//            .query(Point.fromLngLat(point.longitude, point.latitude))
-//            .geocodingTypes(GeocodingCriteria.TYPE_POI)
-//            .build()
-//        reverseGeocode.enqueueCall(object : Callback<GeocodingResponse> {
-//            override fun onResponse(
-//                call: Call<GeocodingResponse>,
-//                response: Response<GeocodingResponse>
-//            ) {
-//                val results = response.body()!!.features()
-//                if (results.size > 0) {
-//
-//                    val firstResultPoint = results[0].center()
-//
-//                    val feature: CarmenFeature = results[0]
-//                    if (c == 0) {
-//                        startLocation += feature.placeName()
-//                        startLocation = startLocation!!.replace(", Dhaka, Bangladesh", ".")
-//                        tvS = findViewById(R.id.tvS)
-//                        tvS.text = startLocation
+//                    if(lat != null && long != null){
+//                        busLoc = LatLng(lat, long)
+//                        updateMarkerPosition(busLoc, status)
+//                        Log.i("my_tag", "lat: $lat long: $long")
+//                    }else {
+//                        Log.e("Firestore", "One or both fields are missing")
 //                    }
-//                    if (c == 1) {
-//                        endLocation += feature.placeName()
-//                        endLocation = endLocation!!.replace(", Dhaka, Bangladesh", ".")
-//                        tvD = findViewById(R.id.tvD)
-//                        tvD.text = endLocation
-//                    }
-//
-//                    Toast.makeText(this@Map, "" + feature.placeName(), Toast.LENGTH_LONG)
-//                        .show()
-//
 //                } else {
-//                    Toast.makeText(this@Map, "Not found", Toast.LENGTH_SHORT).show()
+//                    Log.d("Firestore", "Current data: null")
 //                }
 //            }
-//
-//            override fun onFailure(call: Call<GeocodingResponse>, throwable: Throwable) {
-//                throwable.printStackTrace()
-//            }
-//        })
 //    }
+
+    private fun getBusLocationsFromFirestore() {
+        firestore.collection("busLocations").addSnapshotListener { snapshot, exception ->
+            if (exception != null) {
+                Log.e("Firestore", "Listen failed", exception)
+                return@addSnapshotListener
+            }
+
+            if (snapshot != null) {
+                for (doc in snapshot.documents) {
+                    val busId = doc.id
+                    val lat = doc.getDouble("latitude")
+                    val long = doc.getDouble("longitude")
+                    val status = doc.getString("status")
+
+                    if (lat != null && long != null) {
+                        val busLocation = LatLng(lat, long)
+                        updateBusMarkerPosition(busId, busLocation, status)
+                    } else {
+                        Log.e("Firestore", "One or both fields are missing for bus $busId")
+                    }
+                }
+            } else {
+                Log.d("Firestore", "Current data: null")
+            }
+        }
+    }
+
+    private fun updateBusMarkerPosition(busId: String, location: LatLng, status: String?) {
+        if (status == "inactive") {
+            hideBusMarker(busId)
+            return
+        }
+
+        var busMarker = busMarkers[busId]
+        if (busMarker == null) {
+            // If marker doesn't exist, create a new one
+            val markerOptions = MarkerOptions()
+                .position(location)
+                .title("Bus $busId Location")
+            busMarker = mapboxMap.addMarker(markerOptions)
+            busMarkers[busId] = busMarker
+        } else {
+            // Update marker position
+            updateMarkerPositionWithAnimation(busMarker, location)
+        }
+    }
+
+    private fun updateMarkerPositionWithAnimation(marker: Marker, newLocation: LatLng) {
+        Log.i("my_tag", "marker update fun called")
+
+//        previousLocation = currentLocation
+//        currentLocation = newLocation
+//        Log.i("my_tag", "previous location: $previousLocation")
+//        Log.i("my_tag", "current location: $currentLocation")
+//
+//        previousLocation?.let { prevLocation ->
+//            val interpolator = LinearInterpolator()
+//            val valueAnimator = ValueAnimator.ofFloat(0f, 1f)
+//            valueAnimator.duration = 1000 // Animation duration in milliseconds
+//            valueAnimator.addUpdateListener { animator ->
+//                val fraction = animator.animatedFraction
+//                val lat = (currentLocation!!.latitude - prevLocation.latitude) * fraction + prevLocation.latitude
+//                val lng = (currentLocation!!.longitude - prevLocation.longitude) * fraction + prevLocation.longitude
+//                val animatedPosition = LatLng(lat, lng)
+//                bus?.position = animatedPosition
+//                mapboxMap.updateMarker(bus!!)
+//            }
+//            valueAnimator.interpolator = interpolator
+//            valueAnimator.start()
+//        }
+
+        val previousLocation = marker.position
+        val valueAnimator = ValueAnimator.ofFloat(0f, 1f)
+        valueAnimator.duration = 1000 // Animation duration in milliseconds
+        valueAnimator.addUpdateListener { animation ->
+            val fraction = animation.animatedFraction
+            val lat = (newLocation.latitude - previousLocation.latitude) * fraction + previousLocation.latitude
+            val lng = (newLocation.longitude - previousLocation.longitude) * fraction + previousLocation.longitude
+            val animatedPosition = LatLng(lat, lng)
+            marker.position = animatedPosition
+        }
+        valueAnimator.start()
+    }
 
     private fun initLayers(loadedMapStyle: Style) {
         val routeLayer = LineLayer(ROUTE_LAYER_ID, ROUTE_SOURCE_ID)
@@ -541,7 +553,6 @@ class Map : AppCompatActivity(), OnMapReadyCallback,
     }
 
     private fun addUserLocations() {
-
         work = CarmenFeature.builder().text("Mapbox DC Office")
             .placeName("740 15th Street NW, Washington DC")
             .geometry(Point.fromLngLat(-77.0338348, 38.899750))
@@ -707,5 +718,149 @@ class Map : AppCompatActivity(), OnMapReadyCallback,
         private const val ICON_SOURCE_ID = "icon-source-id"
         private const val RED_PIN_ICON_ID = "red-pin-icon-id"
     }
+    data class Bus(val id: String, val lat: Double, val lng: Double)
 
 }
+
+
+//    private fun fetchRoute(){
+////        btnDisplayRoute.setOnClickListener {
+////            getStopId{
+////                getStop{
+////                    drawRoute(stops[0], stops[1])
+////                }
+////            }
+////        }
+//    }
+
+//    @SuppressLint("LogNotTimber")
+//    private fun getStop(callback: () -> Unit){
+//
+//        val stop = mutableListOf<Point>()
+//
+//        for (documentId in stopId) {
+//            db.collection("Stop").document(documentId).get()
+//                .addOnCompleteListener { task ->
+//                    if (task.isSuccessful) {
+//                        val snapshot = task.result
+//
+//                        // Check if the document exists
+//                        if (snapshot.exists()) {
+//
+//                            // Extract data for each stop
+//                            val lat = snapshot.getString("lat")!!.toDouble()
+//                            val long = snapshot.getString("long")!!.toDouble()
+//
+//                            val stopData = Point.fromLngLat(lat, long)
+//
+//                            stop.add(stopData)
+//
+//                            // Now stopsData list contains the latitude and longitude for each stop
+//
+//                        } else {
+//                            Log.e("stop", "Document $documentId does not exist.")
+//                        }
+//                    } else {
+//                        // Handle errors
+//                        Log.e("stop", "Error getting document $documentId:", task.exception)
+//
+//                        Toast.makeText(this, "Error getting stops: ${task.exception?.message}", Toast.LENGTH_SHORT).show()
+//                    }
+//
+//                    if (stopId.indexOf(documentId) == stopId.size - 1) {
+//                        stops = stop
+//                        callback.invoke() // Callback to indicate that the Firestore query is complete
+//                    }
+//                }
+//                .addOnFailureListener {
+//                    Log.e("stop", "Firestore query failed:", it)
+//
+//                    Toast.makeText(this@Map, "Oops....something went wrong", Toast.LENGTH_SHORT).show()
+//                }
+//        }
+//    }
+
+//    @SuppressLint("LogNotTimber")
+//    private fun getStopId(callback: () -> Unit) {
+//        db.collection("Route").get()
+//            .addOnSuccessListener { querySnapshot ->
+//                if (!querySnapshot.isEmpty) {
+//                    for (documentSnapshot in querySnapshot.documents) {
+//                        val routeData = documentSnapshot.data
+//                        val id = mutableListOf<String>()
+//
+//                        // Extract stops from the routeData map
+//                        for (i in 1..routeData!!.size) {
+//                            val stopKey = "stop$i"
+//                            val stop = routeData[stopKey] as String
+//                            id.add(stop)
+//                        }
+//
+//                        stopId = id
+//                    }
+//                } else {
+//                    // No documents found
+//                }
+//
+//                Log.d("stop", "Route: $stopId")
+//                callback.invoke() // Callback to indicate that the Firestore query is complete
+//            }
+//    }
+
+//    private fun drawRoute(origin: Point, destination: Point) {
+//        client = MapboxDirections.builder()
+//            .origin(origin)
+//            .destination(destination)
+//            .overview(DirectionsCriteria.OVERVIEW_FULL)
+//            .profile(DirectionsCriteria.PROFILE_DRIVING)
+//            .accessToken(resources.getString(R.string.accessToken))
+//            .build()
+//
+//        client?.enqueueCall(this)
+//    }
+
+
+
+//    private fun reverseGeocodeFunc(point: LatLng, c: Int) {
+//        val reverseGeocode = MapboxGeocoding.builder()
+//            .accessToken(resources.getString(R.string.accessToken))
+//            .query(Point.fromLngLat(point.longitude, point.latitude))
+//            .geocodingTypes(GeocodingCriteria.TYPE_POI)
+//            .build()
+//        reverseGeocode.enqueueCall(object : Callback<GeocodingResponse> {
+//            override fun onResponse(
+//                call: Call<GeocodingResponse>,
+//                response: Response<GeocodingResponse>
+//            ) {
+//                val results = response.body()!!.features()
+//                if (results.size > 0) {
+//
+//                    val firstResultPoint = results[0].center()
+//
+//                    val feature: CarmenFeature = results[0]
+//                    if (c == 0) {
+//                        startLocation += feature.placeName()
+//                        startLocation = startLocation!!.replace(", Dhaka, Bangladesh", ".")
+//                        tvS = findViewById(R.id.tvS)
+//                        tvS.text = startLocation
+//                    }
+//                    if (c == 1) {
+//                        endLocation += feature.placeName()
+//                        endLocation = endLocation!!.replace(", Dhaka, Bangladesh", ".")
+//                        tvD = findViewById(R.id.tvD)
+//                        tvD.text = endLocation
+//                    }
+//
+//                    Toast.makeText(this@Map, "" + feature.placeName(), Toast.LENGTH_LONG)
+//                        .show()
+//
+//                } else {
+//                    Toast.makeText(this@Map, "Not found", Toast.LENGTH_SHORT).show()
+//                }
+//            }
+//
+//            override fun onFailure(call: Call<GeocodingResponse>, throwable: Throwable) {
+//                throwable.printStackTrace()
+//            }
+//        })
+//    }
