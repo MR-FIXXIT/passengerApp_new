@@ -12,11 +12,16 @@ class ActivityTicketOutputView : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val ticketId = intent.getStringExtra("ticketID")
         setContentView(R.layout.activity_ticket_output_view)
-        Log.d("shownQRQRQR","QRSHOWNBOYO")
         qrCodeImageView = findViewById(R.id.qrCodeImageView)
-        generateQRCode(ticketId)
+        val intent = intent
+        if (intent != null && intent.hasExtra("ticketId")) {
+            val ticketId = intent.getStringExtra("ticketId")
+            Log.d("shownQRQRQR","QRSHOWNBOYOnonon")
+            generateQRCode(ticketId)
+        }
+        Log.d("shownQRQRQR","QRSHOWNBOYO")
+
     }
 
     private fun generateQRCode(ticketId: String?) {

@@ -111,7 +111,6 @@ class ActivityPayment : AppCompatActivity(), PaymentResultWithDataListener, Dial
             alertDialogBuilder.setMessage("Payment Successful : Ticket Purchased ")
             alertDialogBuilder.show()
             saveToValidTicketsCollection(p1, p2)//remove this
-            startActivity(intent)//remove this
         } catch (e: Exception) {
             e.printStackTrace()
         }
