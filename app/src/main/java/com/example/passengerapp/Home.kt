@@ -57,7 +57,7 @@ class Home : AppCompatActivity() {
         }
 
         btnBuyTicket.setOnClickListener{
-            startActivity(Intent(this@Home, StudentVerf::class.java))
+            startActivity(Intent(this@Home, BuyTicket::class.java))
         }
 
 
