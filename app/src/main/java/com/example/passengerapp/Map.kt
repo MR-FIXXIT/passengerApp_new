@@ -57,6 +57,7 @@ import retrofit2.Response
 
 class Map : AppCompatActivity(), OnMapReadyCallback,
     Callback<DirectionsResponse?>, PermissionsListener {
+    private var markersVisible: Boolean = true
     private lateinit var mapView: MapView
     private lateinit var mapboxMap: MapboxMap
     private lateinit var permissionsManager: PermissionsManager
@@ -181,6 +182,7 @@ class Map : AppCompatActivity(), OnMapReadyCallback,
         stops = mutableListOf()
         firestore = FirebaseFirestore.getInstance()
     }
+
     private fun moveToUserLoc() {
         // Check if mapboxMap and locationComponent are not null
         fabUserLocation.setOnClickListener {
@@ -199,21 +201,44 @@ class Map : AppCompatActivity(), OnMapReadyCallback,
     private fun showBusLoc(){
 
         fabShowBus.setOnClickListener{
-
+            toggleMarkersVisibility()
         }
 
     }
 
-    private fun updateMarkerPosition(location: LatLng) {
+    private fun hideMarkers() {
+        if (bus != null) {
+            bus!!.remove()
+            bus = null
+        }
+    }
+
+    private fun showMarkers() {
+        if (bus == null) getBusLoc()
+    }
+
+    private fun toggleMarkersVisibility() {
+        markersVisible = if (markersVisible) {
+            hideMarkers()
+            false
+        } else {
+            showMarkers()
+            true
+        }
+    }
+
+    private fun updateMarkerPosition(location: LatLng, status: String?) {
         if (bus == null) {
-            // Add marker if it doesn't exist
             val markerOptions = MarkerOptions()
                 .position(location)
                 .title("Bus Location")
             bus = mapboxMap.addMarker(markerOptions)
+
         } else {
-            // Update marker position
             updateMarkerPositionWithAnimation(location)
+            if(status == "inactive"){
+                bus!!.remove()
+            }
         }
     }
 
@@ -221,19 +246,18 @@ class Map : AppCompatActivity(), OnMapReadyCallback,
         firestore.collection("userLocations").document("your_document_id_here")
             .addSnapshotListener{ snapshot, exception ->
                 if (exception != null) {
-                    // Handle any errors that occurred while listening for changes
                     Log.e("Firestore", "Listen failed", exception)
                     return@addSnapshotListener
                 }
 
                 if (snapshot != null && snapshot.exists()) {
-
                     val lat = snapshot.getDouble("latitude")
                     val long = snapshot.getDouble("longitude")
+                    val status = snapshot.getString("status")
 
                     if(lat != null && long != null){
                         busLoc = LatLng(lat, long)
-                        updateMarkerPosition(busLoc)
+                        updateMarkerPosition(busLoc, status)
                         Log.i("my_tag", "lat: $lat long: $long")
                     }else {
                         Log.e("Firestore", "One or both fields are missing")
