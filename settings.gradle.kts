@@ -15,7 +15,7 @@ dependencyResolutionManagement {
 
             credentials.username = "mapbox"
             // Use the secret token stored in gradle.properties as the password
-            credentials.password = providers.gradleProperty("MAPBOX_DOWNLOADS_TOKEN").get()
+            credentials.password = "sk.eyJ1Ijoicml6OTkiLCJhIjoiY2xyaXFmYjNyMGFmazJrb3NtY3JocXVldCJ9.U9ul77d_G2ZFGcf6z04oIQ"
             authentication.create<BasicAuthentication>("basic")
         }
         maven { url = uri("https://jitpack.io") }

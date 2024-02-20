@@ -4,18 +4,19 @@ import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.widget.Button
+import android.widget.ImageButton
 import com.example.passengerapp.student.StudentVerf
 import com.google.firebase.auth.FirebaseAuth
 
 class Home : AppCompatActivity() {
 
     private lateinit var auth: FirebaseAuth
-    private lateinit var btnSignOut: Button
-    private lateinit var btnDisplayMap: Button
-    private lateinit var btnAddStop: Button
-    private lateinit var btnViewStop: Button
-    private lateinit var btnStuPass: Button
-    private lateinit var btnBuyTicket: Button
+    private lateinit var btnSignOut: ImageButton
+    private lateinit var btnDisplayMap: ImageButton
+    private lateinit var btnAddStop: ImageButton
+    private lateinit var btnViewStop: ImageButton
+    private lateinit var btnStuPass: ImageButton
+    private lateinit var btnBuyTicket: ImageButton
 
     private fun init(){
         auth = FirebaseAuth.getInstance()
