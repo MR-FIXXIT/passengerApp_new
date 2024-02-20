@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- activity_payment.xml -->
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="16dp">
+
+    <TextView
+        android:id="@+id/tvTicketDetails"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Ticket Details"
+        android:textSize="18sp"
+        android:layout_marginBottom="16dp"/>
+
+    <!-- Placeholder TextViews for displaying ticket details -->
+    <TextView
+        android:id="@+id/tvPrice"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Price: ₹100.00"
+        android:layout_below="@+id/tvTicketDetails"
+        android:layout_marginTop="8dp"/>
+
+    <TextView
+        android:id="@+id/tvSource"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Source: Your Source"
+        android:layout_below="@+id/tvPrice"
+        android:layout_marginTop="8dp"/>
+
+    <TextView
+        android:id="@+id/tvDestination"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Destination: Your Destination"
+        android:layout_below="@+id/tvSource"
+        android:layout_marginTop="8dp"/>
+
+    <TextView
+        android:id="@+id/tvTimeOfPurchase"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Time of Purchase: 21-Feb-2024 12:34 PM"
+        android:layout_below="@+id/tvDestination"
+        android:layout_marginTop="8dp"/>
+
+    <Button
+        android:id="@+id/btnPay"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Pay Now"
+        android:layout_below="@+id/tvTimeOfPurchase"
+        android:layout_marginTop="16dp"/>
+</RelativeLayout>

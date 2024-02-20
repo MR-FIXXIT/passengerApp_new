@@ -1,5 +1,6 @@
 package com.example.passengerapp
 
+import android.content.Intent
 import android.os.Bundle
 import android.widget.AutoCompleteTextView
 import android.widget.Button
@@ -16,12 +17,13 @@ class BuyTicket : AppCompatActivity() {
     private lateinit var endDestAutoComplete: AutoCompleteTextView
     private lateinit var bookTicket: Button
 
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_ticket_booking)
 
         val stopCollectionRef = db.collection("Stop")
-        val inProcessCollectionRef = db.collection("inProcess")
+        //val inProcessCollectionRef = db.collection("inProcess")
         val inProcessTicketsCollectionRef = db.collection("inProcessTickets")
 
         sourceDestAutoComplete = findViewById(R.id.sourceDestAutoComplete)
@@ -54,16 +56,13 @@ class BuyTicket : AppCompatActivity() {
                 val areStopsPresent = checkStopsPresence(source, destination, stopCollectionRef)
 
                 if (areStopsPresent) {
-                    // Save data to "inProcess" collection
-                    saveToInProcessCollection(source, destination, amount, inProcessCollectionRef)
-
                     // Save data to "inProcessTickets" collection
                     saveToInProcessTicketsCollection(source, destination, amount, inProcessTicketsCollectionRef)
 
-                    // Perform ticket booking or any other action
-                    // You can add your logic here
-
-                    Toast.makeText(this, "Ticket booked successfully!", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, "Ticket details sent to payment!", Toast.LENGTH_SHORT).show()
+//                  Log.d("Shitsnotreal","")
+                    // Launch ActivityPayment with details
+                    launchActivityPayment(source, destination, amount)
                 } else {
                     // Handle case where stops are not present
                     Toast.makeText(this, "Source or destination not found in stops!", Toast.LENGTH_SHORT).show()
@@ -74,6 +73,7 @@ class BuyTicket : AppCompatActivity() {
             }
         }
     }
+
 
     // Calculate distance (simplified)
     private fun calculateDistance(source: String, destination: String): Double {
@@ -86,7 +86,7 @@ class BuyTicket : AppCompatActivity() {
     private fun calculateAmount(distance: Double): Double {
         val baseFare = 10.0
         val perKmRate = 1.5
-        return baseFare + perKmRate * (distance - 2.0)
+        return baseFare + (perKmRate * (distance - 2.0))
     }
 
     // Check if stops are present in the "Stop" collection
@@ -134,7 +134,15 @@ class BuyTicket : AppCompatActivity() {
                 // Handle success
             }
             .addOnFailureListener { e ->
-                // Handle failure
+                // Handle failur§e
             }
+    }
+
+    private fun launchActivityPayment(source: String, destination: String, amount: Double) {
+        val intent = Intent(this, ActivityPayment::class.java)
+        intent.putExtra("source", source)
+        intent.putExtra("destination", destination)
+        intent.putExtra("amount", amount)
+        startActivity(intent)
     }
 }

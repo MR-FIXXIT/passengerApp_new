@@ -34,6 +34,12 @@
             android:name=".Otp"
             android:exported="false" />
         <activity
+            android:name=".ActivityPayment"
+            android:exported="false"/>
+        <activity
+            android:name=".ActivityTicketOutputView"
+            android:exported="false"/>
+        <activity
             android:name=".Login"
             android:exported="true">
             <intent-filter>
