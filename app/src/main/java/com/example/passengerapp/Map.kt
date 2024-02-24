@@ -2,7 +2,6 @@ package com.example.passengerapp
 
 import android.Manifest
 import android.animation.ValueAnimator
-import android.annotation.SuppressLint
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Color
@@ -10,7 +9,6 @@ import android.os.Bundle
 import android.util.Log
 import android.view.View
 import com.mapbox.mapboxsdk.plugins.annotation.SymbolManager
-
 import android.view.animation.LinearInterpolator
 import android.widget.Button
 import android.widget.TextView
@@ -18,12 +16,9 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.res.ResourcesCompat
-import androidx.lifecycle.ReportFragment.Companion.reportFragment
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.gson.JsonObject
 import com.mapbox.android.core.permissions.PermissionsListener
 import com.mapbox.android.core.permissions.PermissionsManager
-import com.mapbox.api.directions.v5.DirectionsCriteria
 import com.mapbox.api.directions.v5.MapboxDirections
 import com.mapbox.api.directions.v5.models.DirectionsResponse
 import com.mapbox.api.geocoding.v5.models.CarmenFeature
@@ -33,6 +28,7 @@ import com.mapbox.geojson.FeatureCollection
 import com.mapbox.geojson.LineString
 import com.mapbox.geojson.Point
 import com.mapbox.mapboxsdk.Mapbox
+import com.mapbox.mapboxsdk.annotations.IconFactory
 import com.mapbox.mapboxsdk.annotations.Marker
 import com.mapbox.mapboxsdk.annotations.MarkerOptions
 import com.mapbox.mapboxsdk.camera.CameraPosition
@@ -45,6 +41,7 @@ import com.mapbox.mapboxsdk.maps.MapView
 import com.mapbox.mapboxsdk.maps.MapboxMap
 import com.mapbox.mapboxsdk.maps.OnMapReadyCallback
 import com.mapbox.mapboxsdk.maps.Style
+import com.mapbox.mapboxsdk.plugins.annotation.Symbol
 import com.mapbox.mapboxsdk.plugins.annotation.SymbolOptions
 import com.mapbox.mapboxsdk.plugins.places.autocomplete.PlaceAutocomplete
 import com.mapbox.mapboxsdk.plugins.places.autocomplete.model.PlaceOptions
@@ -57,8 +54,6 @@ import com.mapbox.mapboxsdk.utils.BitmapUtils
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
-
-
 
 class Map : AppCompatActivity(), OnMapReadyCallback,
     Callback<DirectionsResponse?>, PermissionsListener {
@@ -98,9 +93,7 @@ class Map : AppCompatActivity(), OnMapReadyCallback,
     private var currentLocation: LatLng? = null
     private val busMarkers: MutableMap<String, Marker?> = HashMap()
     private lateinit var symbolManager: SymbolManager
-
-
-
+    private var symbolID: Symbol? = null
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -123,11 +116,7 @@ class Map : AppCompatActivity(), OnMapReadyCallback,
             enableLocationComponent(style)
             initSearchFab()
             moveToUserLoc()
-            addUserLocations()
-//            showBusLoc()
-//            getBusLoc()
-//            fetchRoute()
-
+            getBusLoc()
 
             val drawable = ResourcesCompat.getDrawable(
                 resources, R.drawable.ic_baseline_location_on_24, null
@@ -136,47 +125,9 @@ class Map : AppCompatActivity(), OnMapReadyCallback,
             // Add the symbol layer icon to map for future use
             style.addImage(symbolIconId, mBitmap!!)
 
-            // Create an empty GeoJSON source using the empty feature collection
-            setUpSource(style)
-
-            // Set up a new symbol layer for displaying the searched location's feature coordinates
-            setupLayer(style)
             initSource(style)
             initLayers(style)
 
-
-
-//            mapboxMap.addOnMapClickListener(object : OnMapClickListener {
-//                var source: LatLng? = null
-//                override fun onMapClick(point: LatLng): Boolean {
-//                    if (c == 0) {
-//                        origin = Point.fromLngLat(point.longitude, point.latitude)
-//                        source = point
-//                        val markerOptions = MarkerOptions()
-//                        markerOptions.position(point)
-//                        markerOptions.title("Source")
-//                        mapboxMap.addMarker(markerOptions)
-//                        reverseGeocodeFunc(point, c)
-//                    }
-//                    if (c == 1) {
-//                        destination = Point.fromLngLat(point.longitude, point.latitude)
-//                        getStopId(mapboxMap, origin, destination)
-//                        val markerOptions2 = MarkerOptions()
-//                        markerOptions2.position(point)
-//                        markerOptions2.title("destination")
-//                        mapboxMap.addMarker(markerOptions2)
-//                        reverseGeocodeFunc(point, c)
-//                        getStopId(mapboxMap, origin, destination)
-//                    }
-//
-//                    if (c > 1) {
-//                        c = 0
-//                        recreate()
-//                    }
-//                    c++
-//                    return true
-//                }
-//            })
         }
     }
 
@@ -191,109 +142,10 @@ class Map : AppCompatActivity(), OnMapReadyCallback,
         stopId = mutableListOf()
         stops = mutableListOf()
         firestore = FirebaseFirestore.getInstance()
-
     }
 
-//    private fun retrieveBusLocations() {
-//        firestore.collection("buses").get()
-//            .addOnSuccessListener { documents ->
-//            for (document in documents) {
-//                val id = document.id // Unique identifier for the bus
-//                val lat = document.getDouble("lat") ?: 0.0
-//                val lng = document.getDouble("lng") ?: 0.0
-//
-//                val bus = Bus(id, lat, lng)
-//                updateMarker(bus)
-//            }
-//        }
-//    }
-
-//    private fun updateMarker(bus: Bus) {
-//        val existingMarker = busMarkers[bus.id]
-//        val options = SymbolOptions()
-//            .withLatLng(LatLng(bus.lat, bus.lng))
-//            .withIconImage("your-icon-image")
-//            .withIconSize(1.0F)
-//            .withTextField("Bus ${bus.id}")
-//            .withTextSize(12.0f)
-//            .withSymbolSortKey(10f)
-//            .withIconOffset(arrayOf(0f, -9f))
-//            .withDraggable(false)
-//            .withData(bus.id) // Store bus ID as data for easy retrieval
-//
-//        if (existingMarker != null) {
-//            // Update existing marker
-//            existingMarker.setLatLng(LatLng(bus.lat, bus.lng))
-//        } else {
-//            // Create new marker
-//            val newMarker = symbolManager.create(options)
-//            busMarkers[bus.id] = newMarker
-//        }
-//    }
-//    private fun updateMarkerPosition(location: LatLng, status: String?) {
-//        if (status == "inactive") {
-//            hideBusMarker()
-//            return
-//        }
-//
-//        // Show the bus marker
-//        showBusMarker(location)
-//    }
-
-//    private fun updateMarkerPosition(location: LatLng, status: String?) {
-//        if (bus == null) {
-//            val markerOptions = MarkerOptions()
-//                .position(location)
-//                .title("Bus Location")
-//            bus = mapboxMap.addMarker(markerOptions)
-//
-//        } else {
-//            updateMarkerPositionWithAnimation(location)
-//            if(status == "inactive"){
-//                bus!!.remove()
-//            }
-//        }
-//    }
-
-//    private fun showBusMarker(location: LatLng) {
-//        if (bus == null) {
-//            val markerOptions = MarkerOptions()
-//                .position(location)
-//                .title("Bus Location")
-//            bus = mapboxMap.addMarker(markerOptions)
-//        } else {
-//            updateMarkerPositionWithAnimation(location)
-//        }
-//    }
-
-    private fun showOrUpdateBusMarker(busId: String, location: LatLng) {
-        var busMarker = busMarkers[busId]
-        if (busMarker == null) {
-            // If marker doesn't exist, create a new one
-            val markerOptions = MarkerOptions()
-                .position(location)
-                .title("Bus $busId Location")
-            busMarker = mapboxMap.addMarker(markerOptions)
-            busMarkers[busId] = busMarker
-        } else {
-            // Update marker position
-            updateMarkerPositionWithAnimation(busMarker, location)
-        }
-    }
-
-//    private fun hideBusMarker() {
-//        bus?.remove()
-//        bus = null
-//    }
-
-    private fun hideBusMarker(busId: String) {
-        val busMarker = busMarkers[busId]
-        busMarker?.remove()
-        busMarkers.remove(busId)
-    }
 
     private fun moveToUserLoc() {
-        // Check if mapboxMap and locationComponent are not null
         fabUserLocation.setOnClickListener {
             val lastLocation = mapboxMap.locationComponent.lastKnownLocation
             if (lastLocation != null) {
@@ -307,145 +159,84 @@ class Map : AppCompatActivity(), OnMapReadyCallback,
         }
     }
 
-//    private fun showBusLoc(){
-//
-//        fabShowBus.setOnClickListener{
-////            toggleMarkersVisibility()
-//        }
-//
-//    }
-
-//    private fun hideMarkers() {
-//        if (bus != null) {
-//            bus!!.remove()
-//            bus = null
-//        }
-//    }
-
-//    private fun showMarkers() {
-//        if (bus == null) getBusLoc()
-//    }
-
-//    private fun toggleMarkersVisibility() {
-//        markersVisible = if (markersVisible) {
-//            hideMarkers()
-//            false
-//        } else {
-//            showMarkers()
-//            true
-//        }
-//    }
-
-
-
-//    private fun getBusLoc(){
-//        firestore.collection("userLocations").document("your_document_id_here")
-//            .addSnapshotListener{ snapshot, exception ->
-//                if (exception != null) {
-//                    Log.e("Firestore", "Listen failed", exception)
-//                    return@addSnapshotListener
-//                }
-//
-//                if (snapshot != null && snapshot.exists()) {
-//                    val lat = snapshot.getDouble("latitude")
-//                    val long = snapshot.getDouble("longitude")
-//                    val status = snapshot.getString("status")
-//
-//                    if(lat != null && long != null){
-//                        busLoc = LatLng(lat, long)
-//                        updateMarkerPosition(busLoc, status)
-//                        Log.i("my_tag", "lat: $lat long: $long")
-//                    }else {
-//                        Log.e("Firestore", "One or both fields are missing")
-//                    }
-//                } else {
-//                    Log.d("Firestore", "Current data: null")
-//                }
-//            }
-//    }
-
-    private fun getBusLocationsFromFirestore() {
-        firestore.collection("busLocations").addSnapshotListener { snapshot, exception ->
-            if (exception != null) {
-                Log.e("Firestore", "Listen failed", exception)
-                return@addSnapshotListener
-            }
-
-            if (snapshot != null) {
-                for (doc in snapshot.documents) {
-                    val busId = doc.id
-                    val lat = doc.getDouble("latitude")
-                    val long = doc.getDouble("longitude")
-                    val status = doc.getString("status")
-
-                    if (lat != null && long != null) {
-                        val busLocation = LatLng(lat, long)
-                        updateBusMarkerPosition(busId, busLocation, status)
-                    } else {
-                        Log.e("Firestore", "One or both fields are missing for bus $busId")
-                    }
+    private fun getBusLoc(){
+        firestore.collection("userLocations").document("89")
+            .addSnapshotListener{ snapshot, exception ->
+                if (exception != null) {
+                    Log.e("Firestore", "Listen failed", exception)
+                    return@addSnapshotListener
                 }
-            } else {
-                Log.d("Firestore", "Current data: null")
+
+                if (snapshot != null && snapshot.exists()) {
+                    val lat = snapshot.getDouble("latitude")
+                    val long = snapshot.getDouble("longitude")
+                    val status = snapshot.getString("status")
+
+                    if(lat != null && long != null){
+                        busLoc = LatLng(lat, long)
+                        updateMarkerPosition(busLoc, status)
+                        Log.i("my_tag", "lat: $lat long: $long")
+                    }else {
+                        Log.e("Firestore", "One or both fields are missing")
+                    }
+                } else {
+                    Log.d("Firestore", "Current data: null")
+                }
             }
-        }
     }
 
-    private fun updateBusMarkerPosition(busId: String, location: LatLng, status: String?) {
-        if (status == "inactive") {
-            hideBusMarker(busId)
-            return
-        }
+    private fun updateMarkerPosition(location: LatLng, status: String?) {
+        if(bus == null){
+            val busPosDrawable = ResourcesCompat.getDrawable(resources, R.drawable.bus_position_symbol, null)
+            val busPosIcon = IconFactory.getInstance(this).fromBitmap(BitmapUtils.getBitmapFromDrawable(busPosDrawable)!!)
+            bus = mapboxMap.addMarker(
+                MarkerOptions()
+                    .position(location)
+                    .icon(busPosIcon)
+                    .title("BUS")
+            )
 
-        var busMarker = busMarkers[busId]
-        if (busMarker == null) {
-            // If marker doesn't exist, create a new one
-            val markerOptions = MarkerOptions()
-                .position(location)
-                .title("Bus $busId Location")
-            busMarker = mapboxMap.addMarker(markerOptions)
-            busMarkers[busId] = busMarker
         } else {
-            // Update marker position
-            updateMarkerPositionWithAnimation(busMarker, location)
+            if(status == "inactive"){
+                hideBusMarker()
+                return
+            }
+            updateMarkerPositionAnimation(location)
         }
     }
 
-    private fun updateMarkerPositionWithAnimation(marker: Marker, newLocation: LatLng) {
+    private fun hideBusMarker() {
+        mapboxMap.removeMarker(bus!!)
+
+        bus = null
+    }
+
+
+    private fun updateMarkerPositionAnimation(newLocation: LatLng) {
         Log.i("my_tag", "marker update fun called")
 
-//        previousLocation = currentLocation
-//        currentLocation = newLocation
-//        Log.i("my_tag", "previous location: $previousLocation")
-//        Log.i("my_tag", "current location: $currentLocation")
-//
-//        previousLocation?.let { prevLocation ->
-//            val interpolator = LinearInterpolator()
-//            val valueAnimator = ValueAnimator.ofFloat(0f, 1f)
-//            valueAnimator.duration = 1000 // Animation duration in milliseconds
-//            valueAnimator.addUpdateListener { animator ->
-//                val fraction = animator.animatedFraction
-//                val lat = (currentLocation!!.latitude - prevLocation.latitude) * fraction + prevLocation.latitude
-//                val lng = (currentLocation!!.longitude - prevLocation.longitude) * fraction + prevLocation.longitude
-//                val animatedPosition = LatLng(lat, lng)
-//                bus?.position = animatedPosition
-//                mapboxMap.updateMarker(bus!!)
-//            }
-//            valueAnimator.interpolator = interpolator
-//            valueAnimator.start()
-//        }
+        previousLocation = currentLocation
+        currentLocation = newLocation
+        Log.i("my_tag", "previous location: $previousLocation")
+        Log.i("my_tag", "current location: $currentLocation")
 
-        val previousLocation = marker.position
-        val valueAnimator = ValueAnimator.ofFloat(0f, 1f)
-        valueAnimator.duration = 1000 // Animation duration in milliseconds
-        valueAnimator.addUpdateListener { animation ->
-            val fraction = animation.animatedFraction
-            val lat = (newLocation.latitude - previousLocation.latitude) * fraction + previousLocation.latitude
-            val lng = (newLocation.longitude - previousLocation.longitude) * fraction + previousLocation.longitude
-            val animatedPosition = LatLng(lat, lng)
-            marker.position = animatedPosition
+        previousLocation?.let { prevLocation ->
+            val interpolator = LinearInterpolator()
+            val valueAnimator = ValueAnimator.ofFloat(0f, 1f)
+            valueAnimator.duration = 1000 // Animation duration in milliseconds
+            valueAnimator.addUpdateListener { animator ->
+                val fraction = animator.animatedFraction
+                val lat = (currentLocation!!.latitude - prevLocation.latitude) * fraction + prevLocation.latitude
+                val lng = (currentLocation!!.longitude - prevLocation.longitude) * fraction + prevLocation.longitude
+                val animatedPosition = LatLng(lat, lng)
+
+                bus!!.position = animatedPosition
+                mapboxMap.updateMarker(bus!!)
+
+            }
+            valueAnimator.interpolator = interpolator
+            valueAnimator.start()
         }
-        valueAnimator.start()
     }
 
     private fun initLayers(loadedMapStyle: Style) {
@@ -542,7 +333,6 @@ class Map : AppCompatActivity(), OnMapReadyCallback,
                 .placeOptions(
                     PlaceOptions.builder()
                         .limit(10)
-//                        .addInjectedFeature(work)
                         .build(PlaceOptions.MODE_CARDS)
                 )
                 .accessToken(resources.getString(R.string.accessToken))
@@ -552,27 +342,33 @@ class Map : AppCompatActivity(), OnMapReadyCallback,
         }
     }
 
-    private fun addUserLocations() {
-        work = CarmenFeature.builder().text("Mapbox DC Office")
-            .placeName("740 15th Street NW, Washington DC")
-            .geometry(Point.fromLngLat(-77.0338348, 38.899750))
-            .id("mapbox-dc")
-            .properties(JsonObject())
-            .build()
-    }
+//    private fun setUpSource(loadedMapStyle: Style) {
+//        loadedMapStyle.addSource(GeoJsonSource(geojsonSourceLayerId))
+//    }
+//
+//    private fun setupLayer(loadedMapStyle: Style) {
+//        loadedMapStyle.addLayer(
+//            SymbolLayer("SYMBOL_LAYER_ID", geojsonSourceLayerId).withProperties(
+//                PropertyFactory.iconImage(symbolIconId),
+//                PropertyFactory.iconOffset(arrayOf(0f, -8f))
+//            )
+//        )
 
-    private fun setUpSource(loadedMapStyle: Style) {
-        loadedMapStyle.addSource(GeoJsonSource(geojsonSourceLayerId))
-    }
-
-    private fun setupLayer(loadedMapStyle: Style) {
-        loadedMapStyle.addLayer(
-            SymbolLayer("SYMBOL_LAYER_ID", geojsonSourceLayerId).withProperties(
-                PropertyFactory.iconImage(symbolIconId),
-                PropertyFactory.iconOffset(arrayOf(0f, -8f))
-            )
-        )
-    }
+    /**
+     * code to add a marker using SymbolManager
+     */
+//        val symbolManager = SymbolManager(mapView, mapboxMap, loadedMapStyle)
+//
+//// Define the options for your marker
+//        val markerOptions = SymbolOptions()
+//            .withLatLng(LatLng(latitude, longitude)) // Set the position of the marker
+//            .withIconImage("your-icon-image") // Set the icon image for the marker
+//            .withIconOffset(arrayOf(0f, -9f)) // Set an offset for the marker icon if needed
+//        // Add more options as needed
+//
+//// Add the marker to the map using the SymbolManager
+//        symbolManager.create(markerOptions)
+//    }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
@@ -586,6 +382,7 @@ class Map : AppCompatActivity(), OnMapReadyCallback,
             val style = mapboxMap.style
             if (style != null) {
                 val source = style.getSourceAs<GeoJsonSource>(geojsonSourceLayerId)
+
                 source?.setGeoJson(
                     FeatureCollection.fromFeatures(
                         arrayOf(
