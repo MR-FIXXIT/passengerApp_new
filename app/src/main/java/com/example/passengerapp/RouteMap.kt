@@ -121,7 +121,6 @@ class RouteMap : AppCompatActivity(), OnMapReadyCallback,
             getRou()
 
 
-//            getRoute(stops)
         }
     }
 
@@ -212,10 +211,30 @@ class RouteMap : AppCompatActivity(), OnMapReadyCallback,
         }
     }
 
+    private fun getRoute(stops: List<Point>) {
+        if (stops.size >= 3) {
+            val origin = stops.first()
+            val destination = stops.last()
+            val waypoints = mutableListOf<Point>()
+            for (i in 1 until stops.size - 1) {
+                waypoints.add(stops[i])
+            }
 
+            client = MapboxDirections.builder()
+                .origin(origin)
+                .destination(destination)
+                .waypoints(waypoints)
+                .overview(DirectionsCriteria.OVERVIEW_FULL)
+                .profile(DirectionsCriteria.PROFILE_DRIVING)
+                .accessToken(resources.getString(R.string.accessToken))
+                .build()
 
-
-
+            client!!.enqueueCall(this)
+        } else {
+            // Handle case when there are not enough stops to construct a route
+            Toast.makeText(this, "At least 3 stops are required to construct a route", Toast.LENGTH_SHORT).show()
+        }
+    }
 
     private fun initLayers(loadedMapStyle: Style) {
         val routeLayer = LineLayer(ROUTE_LAYER_ID, ROUTE_SOURCE_ID)
@@ -266,30 +285,7 @@ class RouteMap : AppCompatActivity(), OnMapReadyCallback,
         loadedMapStyle.addSource(iconGeoJsonSource)
     }
 
-    private fun getRoute(stops: List<Point>) {
-        if (stops.size >= 3) {
-            val origin = stops.first()
-            val destination = stops.last()
-            val waypoints = mutableListOf<Point>()
-            for (i in 1 until stops.size - 1) {
-                waypoints.add(stops[i])
-            }
 
-            client = MapboxDirections.builder()
-                .origin(origin)
-                .destination(destination)
-                .waypoints(waypoints)
-                .overview(DirectionsCriteria.OVERVIEW_FULL)
-                .profile(DirectionsCriteria.PROFILE_DRIVING)
-                .accessToken(resources.getString(R.string.accessToken))
-                .build()
-
-            client!!.enqueueCall(this)
-        } else {
-            // Handle case when there are not enough stops to construct a route
-            Toast.makeText(this, "At least 3 stops are required to construct a route", Toast.LENGTH_SHORT).show()
-        }
-    }
 
     override fun onResponse(
         call: Call<DirectionsResponse?>,

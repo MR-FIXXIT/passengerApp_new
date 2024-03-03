@@ -1,21 +1,16 @@
 package com.example.passengerapp
 
-import android.os.Bundle
-import android.widget.Button
-import android.widget.TextView
-import androidx.appcompat.app.AppCompatActivity
 import android.app.AlertDialog
 import android.content.DialogInterface
 import android.content.Intent
-import android.graphics.Bitmap
-import android.text.TextUtils
+import android.os.Bundle
 import android.util.Log
+import android.widget.Button
 import android.widget.ImageView
-import android.widget.Toast
+import android.widget.TextView
+import androidx.appcompat.app.AppCompatActivity
 import com.google.firebase.firestore.CollectionReference
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.zxing.BarcodeFormat
-import com.journeyapps.barcodescanner.BarcodeEncoder
 import com.razorpay.Checkout
 import com.razorpay.PaymentData
 import com.razorpay.PaymentResultWithDataListener
@@ -34,6 +29,9 @@ class ActivityPayment : AppCompatActivity(), PaymentResultWithDataListener, Dial
     private lateinit var tvTimeOfPurchase: TextView
     private lateinit var btnPay: Button
     private lateinit var qrCodeImageView: ImageView
+    private var source: String? = null
+    private var destination: String? = null
+    private var fare: Double = 0.0
 
     private val TAG: String = ActivityPayment::class.java.simpleName
     private lateinit var alertDialogBuilder: AlertDialog.Builder
@@ -59,20 +57,21 @@ class ActivityPayment : AppCompatActivity(), PaymentResultWithDataListener, Dial
         alertDialogBuilder.setPositiveButton("Ok", this)
 
         // Get details from the intent
-        val source = intent.getStringExtra("source")
-        val destination = intent.getStringExtra("destination")
-        val amount = intent.getDoubleExtra("amount", 0.0)
+        source = intent.getStringExtra("source")
+        destination = intent.getStringExtra("destination")
+        fare = intent.getIntExtra("fare", 0).toDouble()
 
         // Display details
         tvTicketDetails.text = "Ticket Details"
-        tvPrice.text = "Price: ₹${"%.2f".format(amount)}"
+
+        tvPrice.text = "Price: ₹$fare"
         tvSource.text = "Source: $source"
         tvDestination.text = "Destination: $destination"
         tvTimeOfPurchase.text = "Time of Purchase: ${getCurrentDateTime()}"
 
         // Set up click listener for the "Pay Now" button
         btnPay.setOnClickListener {
-            startRazorpayPayment(amount)
+            startRazorpayPayment(fare)
         }
     }
 
@@ -137,12 +136,11 @@ class ActivityPayment : AppCompatActivity(), PaymentResultWithDataListener, Dial
         val ticketId = UUID.randomUUID().toString()
         val ticketDetails = hashMapOf(
             "ticketId" to ticketId,
-            "source" to tvSource.text.toString(),
-            "destination" to tvDestination.text.toString(),
-            "amount" to tvPrice.text.toString(),
+            "source" to source,
+            "destination" to destination,
+            "fare" to fare,
             "timeOfPurchase" to getCurrentDateTime(),
             "paymentId" to paymentId
-            // Add other fields as needed
         )
 
         // Save data to "validTickets" collection

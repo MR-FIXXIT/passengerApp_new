@@ -17,25 +17,16 @@ class ActivityTicketOutputView : AppCompatActivity() {
         val intent = intent
         if (intent != null && intent.hasExtra("ticketId")) {
             val ticketId = intent.getStringExtra("ticketId")
-            Log.d("shownQRQRQR","QRSHOWNBOYOnonon")
             generateQRCode(ticketId)
         }
-        Log.d("shownQRQRQR","QRSHOWNBOYO")
-
     }
 
     private fun generateQRCode(ticketId: String?) {
         if (ticketId != null) {
             val qrCode = QRCode()
-            val bitmap: Bitmap? = qrCode.encode("$ticketId")
-            Log.d("shownQRQRQR","theshitwasshownQRSHOWNBOYO {$ticketId}")
+            val bitmap: Bitmap = qrCode.encode("$ticketId")
 
-            if (bitmap != null) {
-                Log.d("shownQRQRQR","theshitwasshownQRSHOWNBOYO{$ticketId}\"")
-
-                // Set the generated QR code to the ImageView
-                qrCodeImageView.setImageBitmap(bitmap)
-            }
+            qrCodeImageView.setImageBitmap(bitmap)
         }
     }
 }

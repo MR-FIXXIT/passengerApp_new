@@ -8,9 +8,7 @@ import android.graphics.Color
 import android.os.Bundle
 import android.util.Log
 import android.view.View
-import com.mapbox.mapboxsdk.plugins.annotation.SymbolManager
 import android.view.animation.LinearInterpolator
-import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -19,7 +17,6 @@ import androidx.core.content.res.ResourcesCompat
 import com.google.firebase.firestore.FirebaseFirestore
 import com.mapbox.android.core.permissions.PermissionsListener
 import com.mapbox.android.core.permissions.PermissionsManager
-import com.mapbox.api.directions.v5.MapboxDirections
 import com.mapbox.api.directions.v5.models.DirectionsResponse
 import com.mapbox.api.geocoding.v5.models.CarmenFeature
 import com.mapbox.core.constants.Constants
@@ -34,15 +31,12 @@ import com.mapbox.mapboxsdk.annotations.MarkerOptions
 import com.mapbox.mapboxsdk.camera.CameraPosition
 import com.mapbox.mapboxsdk.camera.CameraUpdateFactory
 import com.mapbox.mapboxsdk.geometry.LatLng
-import com.mapbox.mapboxsdk.location.LocationComponent
 import com.mapbox.mapboxsdk.location.LocationComponentActivationOptions
 import com.mapbox.mapboxsdk.location.modes.RenderMode
 import com.mapbox.mapboxsdk.maps.MapView
 import com.mapbox.mapboxsdk.maps.MapboxMap
 import com.mapbox.mapboxsdk.maps.OnMapReadyCallback
 import com.mapbox.mapboxsdk.maps.Style
-import com.mapbox.mapboxsdk.plugins.annotation.Symbol
-import com.mapbox.mapboxsdk.plugins.annotation.SymbolOptions
 import com.mapbox.mapboxsdk.plugins.places.autocomplete.PlaceAutocomplete
 import com.mapbox.mapboxsdk.plugins.places.autocomplete.model.PlaceOptions
 import com.mapbox.mapboxsdk.style.layers.LineLayer
@@ -57,43 +51,28 @@ import retrofit2.Response
 
 class Map : AppCompatActivity(), OnMapReadyCallback,
     Callback<DirectionsResponse?>, PermissionsListener {
-    private var markersVisible: Boolean = true
     private lateinit var mapView: MapView
     private lateinit var mapboxMap: MapboxMap
     private lateinit var permissionsManager: PermissionsManager
-    private lateinit var locationComponent: LocationComponent
     private lateinit var db: FirebaseFirestore
     private lateinit var fabUserLocation: View
     private lateinit var fabLocationSearch: View
-    private lateinit var fabShowBus: View
-    private lateinit var btnDisplayRoute: Button
     private lateinit var tvDistance: TextView
     private lateinit var tvS: TextView
     private lateinit var tvD: TextView
-    private lateinit var home: CarmenFeature
-    private lateinit var work: CarmenFeature
     private lateinit var stopId: MutableList<String>
     private lateinit var stops: MutableList<Point>
-    private lateinit var stop: MutableList<Point>
     private val geojsonSourceLayerId = "geojsonSourceLayerId"
     private val symbolIconId = "symbolIconId"
-    var address: String? = null
     private var origin: Point = Point.fromLngLat(90.399452, 23.777176)
     private var destination: Point = Point.fromLngLat(90.399452, 23.777176)
-    private var client: MapboxDirections? = null
-    var c = 0
     private var distance = 0.0
     private var st: String? = null
-    var startLocation: String? = ""
-    var endLocation: String? = ""
     private var bus: Marker? = null
     private lateinit var busLoc: LatLng
     private lateinit var firestore: FirebaseFirestore
     private var previousLocation: LatLng? = null
     private var currentLocation: LatLng? = null
-    private val busMarkers: MutableMap<String, Marker?> = HashMap()
-    private lateinit var symbolManager: SymbolManager
-    private var symbolID: Symbol? = null
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -342,33 +321,6 @@ class Map : AppCompatActivity(), OnMapReadyCallback,
         }
     }
 
-//    private fun setUpSource(loadedMapStyle: Style) {
-//        loadedMapStyle.addSource(GeoJsonSource(geojsonSourceLayerId))
-//    }
-//
-//    private fun setupLayer(loadedMapStyle: Style) {
-//        loadedMapStyle.addLayer(
-//            SymbolLayer("SYMBOL_LAYER_ID", geojsonSourceLayerId).withProperties(
-//                PropertyFactory.iconImage(symbolIconId),
-//                PropertyFactory.iconOffset(arrayOf(0f, -8f))
-//            )
-//        )
-
-    /**
-     * code to add a marker using SymbolManager
-     */
-//        val symbolManager = SymbolManager(mapView, mapboxMap, loadedMapStyle)
-//
-//// Define the options for your marker
-//        val markerOptions = SymbolOptions()
-//            .withLatLng(LatLng(latitude, longitude)) // Set the position of the marker
-//            .withIconImage("your-icon-image") // Set the icon image for the marker
-//            .withIconOffset(arrayOf(0f, -9f)) // Set an offset for the marker icon if needed
-//        // Add more options as needed
-//
-//// Add the marker to the map using the SymbolManager
-//        symbolManager.create(markerOptions)
-//    }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
@@ -519,145 +471,3 @@ class Map : AppCompatActivity(), OnMapReadyCallback,
 
 }
 
-
-//    private fun fetchRoute(){
-////        btnDisplayRoute.setOnClickListener {
-////            getStopId{
-////                getStop{
-////                    drawRoute(stops[0], stops[1])
-////                }
-////            }
-////        }
-//    }
-
-//    @SuppressLint("LogNotTimber")
-//    private fun getStop(callback: () -> Unit){
-//
-//        val stop = mutableListOf<Point>()
-//
-//        for (documentId in stopId) {
-//            db.collection("Stop").document(documentId).get()
-//                .addOnCompleteListener { task ->
-//                    if (task.isSuccessful) {
-//                        val snapshot = task.result
-//
-//                        // Check if the document exists
-//                        if (snapshot.exists()) {
-//
-//                            // Extract data for each stop
-//                            val lat = snapshot.getString("lat")!!.toDouble()
-//                            val long = snapshot.getString("long")!!.toDouble()
-//
-//                            val stopData = Point.fromLngLat(lat, long)
-//
-//                            stop.add(stopData)
-//
-//                            // Now stopsData list contains the latitude and longitude for each stop
-//
-//                        } else {
-//                            Log.e("stop", "Document $documentId does not exist.")
-//                        }
-//                    } else {
-//                        // Handle errors
-//                        Log.e("stop", "Error getting document $documentId:", task.exception)
-//
-//                        Toast.makeText(this, "Error getting stops: ${task.exception?.message}", Toast.LENGTH_SHORT).show()
-//                    }
-//
-//                    if (stopId.indexOf(documentId) == stopId.size - 1) {
-//                        stops = stop
-//                        callback.invoke() // Callback to indicate that the Firestore query is complete
-//                    }
-//                }
-//                .addOnFailureListener {
-//                    Log.e("stop", "Firestore query failed:", it)
-//
-//                    Toast.makeText(this@Map, "Oops....something went wrong", Toast.LENGTH_SHORT).show()
-//                }
-//        }
-//    }
-
-//    @SuppressLint("LogNotTimber")
-//    private fun getStopId(callback: () -> Unit) {
-//        db.collection("Route").get()
-//            .addOnSuccessListener { querySnapshot ->
-//                if (!querySnapshot.isEmpty) {
-//                    for (documentSnapshot in querySnapshot.documents) {
-//                        val routeData = documentSnapshot.data
-//                        val id = mutableListOf<String>()
-//
-//                        // Extract stops from the routeData map
-//                        for (i in 1..routeData!!.size) {
-//                            val stopKey = "stop$i"
-//                            val stop = routeData[stopKey] as String
-//                            id.add(stop)
-//                        }
-//
-//                        stopId = id
-//                    }
-//                } else {
-//                    // No documents found
-//                }
-//
-//                Log.d("stop", "Route: $stopId")
-//                callback.invoke() // Callback to indicate that the Firestore query is complete
-//            }
-//    }
-
-//    private fun drawRoute(origin: Point, destination: Point) {
-//        client = MapboxDirections.builder()
-//            .origin(origin)
-//            .destination(destination)
-//            .overview(DirectionsCriteria.OVERVIEW_FULL)
-//            .profile(DirectionsCriteria.PROFILE_DRIVING)
-//            .accessToken(resources.getString(R.string.accessToken))
-//            .build()
-//
-//        client?.enqueueCall(this)
-//    }
-
-
-
-//    private fun reverseGeocodeFunc(point: LatLng, c: Int) {
-//        val reverseGeocode = MapboxGeocoding.builder()
-//            .accessToken(resources.getString(R.string.accessToken))
-//            .query(Point.fromLngLat(point.longitude, point.latitude))
-//            .geocodingTypes(GeocodingCriteria.TYPE_POI)
-//            .build()
-//        reverseGeocode.enqueueCall(object : Callback<GeocodingResponse> {
-//            override fun onResponse(
-//                call: Call<GeocodingResponse>,
-//                response: Response<GeocodingResponse>
-//            ) {
-//                val results = response.body()!!.features()
-//                if (results.size > 0) {
-//
-//                    val firstResultPoint = results[0].center()
-//
-//                    val feature: CarmenFeature = results[0]
-//                    if (c == 0) {
-//                        startLocation += feature.placeName()
-//                        startLocation = startLocation!!.replace(", Dhaka, Bangladesh", ".")
-//                        tvS = findViewById(R.id.tvS)
-//                        tvS.text = startLocation
-//                    }
-//                    if (c == 1) {
-//                        endLocation += feature.placeName()
-//                        endLocation = endLocation!!.replace(", Dhaka, Bangladesh", ".")
-//                        tvD = findViewById(R.id.tvD)
-//                        tvD.text = endLocation
-//                    }
-//
-//                    Toast.makeText(this@Map, "" + feature.placeName(), Toast.LENGTH_LONG)
-//                        .show()
-//
-//                } else {
-//                    Toast.makeText(this@Map, "Not found", Toast.LENGTH_SHORT).show()
-//                }
-//            }
-//
-//            override fun onFailure(call: Call<GeocodingResponse>, throwable: Throwable) {
-//                throwable.printStackTrace()
-//            }
-//        })
-//    }
