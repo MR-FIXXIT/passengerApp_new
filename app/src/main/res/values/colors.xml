@@ -9,13 +9,12 @@
     <color name="white">#FFFFFFFF</color>
     <color name="bgGrey">#3F414A</color>
 
-    <color name="btn_color">#FF735C</color>
-    <color name="edit_text_color">#FFD6CF</color>
+    <color name="primary_color">#FFC801</color>
+    <color name="secondary_color">#FFE480</color>
     <color name="hint_text_color">#D4D4D4</color>
     <color name="colorPrimary">#009688</color>
     <color name="text_view_ideal">#1E8BAA</color>
     <color name="text_view_hint_ideal">#BA6C4E4E</color>
-    <color name="yellow">#FFC801</color>
     <color name="border_color">#817C85</color>
 
 

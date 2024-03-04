@@ -59,24 +59,6 @@ class Login : AppCompatActivity() {
         auth = FirebaseAuth.getInstance()
     }
 
-//    private fun signInWithPhoneAuthCredential(credential: PhoneAuthCredential) {
-//        auth.signInWithCredential(credential)
-//            .addOnCompleteListener(this) { task ->
-//                if (task.isSuccessful) {
-//                    // Sign in success, update UI with the signed-in user's information
-//                    Toast.makeText(this , "Authenticate Successfully" , Toast.LENGTH_SHORT).show()
-//                } else {
-//                    // Sign in failed, display a message and update the UI
-//                    Log.d("TAG", "signInWithPhoneAuthCredential: ${task.exception.toString()}")
-//                    if (task.exception is FirebaseAuthInvalidCredentialsException) {
-//                        // The verification code entered was invalid
-//                    }
-//                    // Update UI
-//                }
-//                mProgressBar.visibility = View.INVISIBLE
-//            }
-//    }
-
 
     private val callbacks = object : PhoneAuthProvider.OnVerificationStateChangedCallbacks() {
 

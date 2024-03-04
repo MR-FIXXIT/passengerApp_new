@@ -3,11 +3,12 @@ package com.example.passengerapp
 import android.app.AlertDialog
 import android.content.DialogInterface
 import android.content.Intent
+import android.graphics.Bitmap
 import android.os.Bundle
-import android.util.Log
 import android.widget.Button
+import android.widget.GridView
 import android.widget.ImageView
-import android.widget.TextView
+import android.widget.SimpleAdapter
 import androidx.appcompat.app.AppCompatActivity
 import com.google.firebase.firestore.CollectionReference
 import com.google.firebase.firestore.FirebaseFirestore
@@ -19,19 +20,21 @@ import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
 import java.util.UUID
+import kotlin.collections.Map
 
 class ActivityPayment : AppCompatActivity(), PaymentResultWithDataListener, DialogInterface.OnClickListener {
 
-    private lateinit var tvTicketDetails: TextView
-    private lateinit var tvPrice: TextView
-    private lateinit var tvSource: TextView
-    private lateinit var tvDestination: TextView
-    private lateinit var tvTimeOfPurchase: TextView
+
+    private lateinit var gv1: GridView
+    private lateinit var details: Map<String, String>
     private lateinit var btnPay: Button
     private lateinit var qrCodeImageView: ImageView
     private var source: String? = null
+    private lateinit var QR: ImageView
+    private var distance: Float? = null
     private var destination: String? = null
     private var fare: Double = 0.0
+    private var ticketId: String = ""
 
     private val TAG: String = ActivityPayment::class.java.simpleName
     private lateinit var alertDialogBuilder: AlertDialog.Builder
@@ -44,12 +47,9 @@ class ActivityPayment : AppCompatActivity(), PaymentResultWithDataListener, Dial
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_payment)
 
-        tvTicketDetails = findViewById(R.id.tvTicketDetails)
-        tvPrice = findViewById(R.id.tvPrice)
-        tvSource = findViewById(R.id.tvSource)
-        tvDestination = findViewById(R.id.tvDestination)
-        tvTimeOfPurchase = findViewById(R.id.tvTimeOfPurchase)
+        gv1 = findViewById(R.id.gridView)
         btnPay = findViewById(R.id.btnPay)
+        QR = findViewById(R.id.ivQR)
 
         alertDialogBuilder = AlertDialog.Builder(this@ActivityPayment)
         alertDialogBuilder.setTitle("Payment Result")
@@ -60,16 +60,38 @@ class ActivityPayment : AppCompatActivity(), PaymentResultWithDataListener, Dial
         source = intent.getStringExtra("source")
         destination = intent.getStringExtra("destination")
         fare = intent.getIntExtra("fare", 0).toDouble()
+        ticketId = UUID.randomUUID().toString()
+        distance = intent.getFloatExtra("dist", 0.0f)
 
         // Display details
-        tvTicketDetails.text = "Ticket Details"
+//        tvTicketDetails.text = "Ticket Details"
 
-        tvPrice.text = "Price: ₹$fare"
-        tvSource.text = "Source: $source"
-        tvDestination.text = "Destination: $destination"
-        tvTimeOfPurchase.text = "Time of Purchase: ${getCurrentDateTime()}"
+        details = mapOf(
+            "Source" to "$source",
+            "Destination" to "$destination",
+            "Time Of Purchase" to "${getCurrentDateTime()}",
+            "Ticket ID" to "$ticketId",
+            "Distance" to String.format("%.2f KM", distance),
+            "Fare" to "RS $fare"
+        )
 
-        // Set up click listener for the "Pay Now" button
+        val detailEntries = details.map { entry ->
+            mapOf(
+                "key" to entry.key,
+                "value" to entry.value
+            )
+        }
+
+        val adapter = SimpleAdapter(
+            this,
+            detailEntries,
+            R.layout.cell,
+            arrayOf("key", "value"),
+            intArrayOf(R.id.textKey, R.id.textValue)
+        )
+
+        gv1.adapter = adapter
+
         btnPay.setOnClickListener {
             startRazorpayPayment(fare)
         }
@@ -99,7 +121,7 @@ class ActivityPayment : AppCompatActivity(), PaymentResultWithDataListener, Dial
         try {
             alertDialogBuilder.setMessage("Payment Successful : Payment ID: $p0\nPayment Data: ${p1?.data}")
             alertDialogBuilder.show()
-            saveToValidTicketsCollection(p0, p1)
+            saveToValidTicketsCollection(p0)
         } catch (e: Exception) {
             e.printStackTrace()
         }
@@ -109,7 +131,7 @@ class ActivityPayment : AppCompatActivity(), PaymentResultWithDataListener, Dial
         try {
             alertDialogBuilder.setMessage("Payment Successful : Ticket Purchased ")
             alertDialogBuilder.show()
-            saveToValidTicketsCollection(p1, p2)//remove this
+            saveToValidTicketsCollection(p1)//remove this
         } catch (e: Exception) {
             e.printStackTrace()
         }
@@ -132,8 +154,8 @@ class ActivityPayment : AppCompatActivity(), PaymentResultWithDataListener, Dial
         val dateFormat = SimpleDateFormat("dd-MMM-yyyy hh:mm a", Locale.getDefault())
         return dateFormat.format(calendar.time)
     }
-    private fun saveToValidTicketsCollection(paymentId: String?, paymentData: PaymentData?) {
-        val ticketId = UUID.randomUUID().toString()
+    private fun saveToValidTicketsCollection(paymentId: String?) {
+
         val ticketDetails = hashMapOf(
             "ticketId" to ticketId,
             "source" to source,
@@ -146,13 +168,17 @@ class ActivityPayment : AppCompatActivity(), PaymentResultWithDataListener, Dial
         // Save data to "validTickets" collection
         validTicketsCollection.add(ticketDetails)
             .addOnSuccessListener {
-                val intent = Intent(this, ActivityTicketOutputView::class.java)
-                intent.putExtra("ticketId", ticketId)
-                startActivity(intent)
+                generateQRCode()
             }
-            .addOnFailureListener { e ->
-                // Handle failure
-            }
+    }
+
+    private fun generateQRCode() {
+        if (ticketId != null) {
+            val qrCode = QRCode()
+            val bitmap: Bitmap = qrCode.encode("$ticketId")
+
+            QR.setImageBitmap(bitmap)
+        }
     }
 
 }

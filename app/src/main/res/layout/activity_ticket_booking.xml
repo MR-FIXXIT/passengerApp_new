@@ -1,39 +1,94 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:background="@color/white">
 
-    <AutoCompleteTextView
-        android:id="@+id/sourceDestAutoComplete"
-        android:layout_width="200dp"
+    <ImageView
+        android:id="@+id/imageView3"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="48dp"
-        android:hint="Enter Source"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.497"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/endDestAutoComplete" />
+        app:layout_constraintTop_toTopOf="parent"
+        app:srcCompat="@drawable/phone_auth" />
 
-    <AutoCompleteTextView
-        android:id="@+id/endDestAutoComplete"
-        android:layout_width="200dp"
+    <ImageButton
+        android:id="@+id/ibSwitch_BuyTicket"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="68dp"
-        android:hint="Enter Destination"
+        android:background="?android:attr/colorBackground"
+        android:src="@drawable/switch_button_icon"
+        app:layout_constraintBottom_toTopOf="@+id/tvDest_ticketBooking"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.498"
+        app:layout_constraintHorizontal_bias="0.931"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toBottomOf="@+id/tvSource_ticketBooking"
+        app:layout_constraintVertical_bias="1.0" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Destination"
+        android:textSize="17sp"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toTopOf="@+id/tvDest_ticketBooking"
+        app:layout_constraintStart_toStartOf="@+id/tvDest_ticketBooking" />
+
+    <TextView
+        android:id="@+id/tvDest_ticketBooking"
+        android:layout_width="280dp"
+        android:layout_height="59dp"
+        android:layout_marginTop="40dp"
+        android:background="@drawable/edit_text_bg"
+        android:ems="10"
+        android:gravity="center"
+        android:textSize="21sp"
+        android:textColor="@color/black"
+        android:textColorHint="#606060"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.32"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/tvSource_ticketBooking" />
+
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Source"
+        android:textSize="17sp"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toTopOf="@+id/tvSource_ticketBooking"
+        app:layout_constraintStart_toStartOf="@+id/tvSource_ticketBooking" />
+
+    <TextView
+        android:id="@+id/tvSource_ticketBooking"
+        android:layout_width="280dp"
+        android:layout_height="59dp"
+        android:layout_marginTop="44dp"
+        android:background="@drawable/edit_text_bg"
+        android:ems="10"
+        android:textColor="@color/black"
+        android:gravity="center"
+        android:textSize="21sp"
+        android:textColorHint="#606060"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.32"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/imageView3" />
 
     <Button
         android:id="@+id/bookTicket"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="144dp"
-        android:layout_marginTop="36dp"
+        android:layout_width="149dp"
+        android:layout_height="68dp"
+        android:layout_marginTop="88dp"
+        android:backgroundTint="@color/primary_color"
         android:text="Book Ticket"
+        android:textColor="@color/black"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/sourceDestAutoComplete" />
+        app:layout_constraintTop_toBottomOf="@+id/tvDest_ticketBooking" />
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -9,7 +9,7 @@ class QRCode {
     fun encode(data: String?): Bitmap {
         val barcodeEncoder = BarcodeEncoder()
 
-        val bitMatrix: BitMatrix = barcodeEncoder.encode(data, BarcodeFormat.QR_CODE, 200, 200)
+        val bitMatrix: BitMatrix = barcodeEncoder.encode(data, BarcodeFormat.QR_CODE, 700, 700)
 
         val bitmap: Bitmap = Bitmap.createBitmap(bitMatrix.width, bitMatrix.height, Bitmap.Config.RGB_565)
 

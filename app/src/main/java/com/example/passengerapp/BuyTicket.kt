@@ -1,39 +1,35 @@
 package com.example.passengerapp
 
+import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
-import android.widget.AutoCompleteTextView
 import android.widget.Button
+import android.widget.ImageButton
+import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.google.firebase.firestore.CollectionReference
 import com.google.firebase.firestore.FirebaseFirestore
-import com.mapbox.api.directions.v5.DirectionsCriteria
-import com.mapbox.api.directions.v5.MapboxDirections
-import com.mapbox.api.directions.v5.models.DirectionsResponse
-import com.mapbox.geojson.Point
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
 
 import java.util.*
 import kotlin.math.ceil
 
 class BuyTicket : AppCompatActivity(){
 
+    private val VIEW_STOPS_REQUEST_CODE: Int = 1
     private val firestore = FirebaseFirestore.getInstance()
-    private lateinit var sourceDestAutoComplete: AutoCompleteTextView
-    private lateinit var endDestAutoComplete: AutoCompleteTextView
+    private lateinit var tvSource: TextView
+    private lateinit var tvDest: TextView
     private lateinit var bookTicket: Button
     private lateinit var sourceID: String
     private lateinit var destinationID: String
     private var distance: Float = 0.0F
+    private lateinit var ibSwitch: ImageButton
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -41,14 +37,23 @@ class BuyTicket : AppCompatActivity(){
 
         init()
 
-        val stopCollectionRef = firestore.collection("Stop")
-        val inProcessTicketsCollectionRef = firestore.collection("inProcessTickets")
+        tvSource.setOnClickListener {
+            selectStop("source")
+        }
 
+        tvDest.setOnClickListener {
+            selectStop("dest")
+        }
 
-        // Set up click listener for the "Book Ticket" button
+        ibSwitch.setOnClickListener {
+            val temp = tvSource.text
+            tvSource.text = tvDest.text
+            tvDest.text = temp
+        }
+
         bookTicket.setOnClickListener {
-            val source = sourceDestAutoComplete.text.toString()
-            val destination = endDestAutoComplete.text.toString()
+            val source = tvSource.text.toString()
+            val destination = tvDest.text.toString()
 
             // Validate that source and destination are not empty
             if (source.isNotEmpty() && destination.isNotEmpty()) {
@@ -65,10 +70,18 @@ class BuyTicket : AppCompatActivity(){
         }
     }
 
+    private fun selectStop(tag: String){
+        val intent = Intent(this, ViewStops::class.java)
+        intent.putExtra("tvTag", tag)
+        intent.putExtra("true", true)
+        startActivityForResult(intent, VIEW_STOPS_REQUEST_CODE)
+    }
+
     private fun init(){
-        sourceDestAutoComplete = findViewById(R.id.sourceDestAutoComplete)
-        endDestAutoComplete = findViewById(R.id.endDestAutoComplete)
+        tvSource = findViewById(R.id.tvSource_ticketBooking)
+        tvDest = findViewById(R.id.tvDest_ticketBooking)
         bookTicket = findViewById(R.id.bookTicket)
+        ibSwitch = findViewById(R.id.ibSwitch_BuyTicket)
     }
 
     private fun launchActivityPayment(source: String, destination: String, fare: Int) {
@@ -77,6 +90,7 @@ class BuyTicket : AppCompatActivity(){
         intent.putExtra("destination", destination)
         Log.i("my_tag", "Fare to send : $fare")
         intent.putExtra("fare", fare)
+        intent.putExtra("dist", distance)
 
         startActivity(intent)
     }
@@ -99,6 +113,7 @@ class BuyTicket : AppCompatActivity(){
                         callback(0f)
                     }
                 } else {
+                    Toast.makeText(this, "Route does not exist in DataBase", Toast.LENGTH_LONG).show()
                     Log.e("getRouteDistance", "Document with routeID $routeID doesn't exist")
                 }
             }
@@ -118,7 +133,6 @@ class BuyTicket : AppCompatActivity(){
         val collectionName = "Stop"
         val fieldName = "stop_name"
         val stopNames = arrayOf(source, destination)
-        var documentId = ""
 
         for(stopName in stopNames){
             val documents = firestore.collection(collectionName)
@@ -156,6 +170,21 @@ class BuyTicket : AppCompatActivity(){
         return routeFare
     }
 
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+
+        if (requestCode == VIEW_STOPS_REQUEST_CODE && resultCode == Activity.RESULT_OK) {
+            val stopName = data?.getStringExtra("stop_name")
+            val tag = data?.getStringExtra("tvTag")
+
+            when(tag){
+                "source" -> tvSource.text = stopName
+                "dest" -> tvDest.text = stopName
+            }
+        }
+
+    }
+
     // Check if stops are present in the "Stop" collection
     private fun checkStopsPresence(source: String, destination: String, stopCollectionRef: CollectionReference): Boolean {
         // Implement your logic to check if stops are present in the collection
@@ -180,28 +209,4 @@ class BuyTicket : AppCompatActivity(){
                 // Handle failure
             }
     }
-
-
-
-    // Save data to "inProcessTickets" collection
-    private fun saveToInProcessTicketsCollection(source: String, destination: String, amount: Double, inProcessTicketsCollectionRef: CollectionReference) {
-        // Implement your logic to save data to "inProcessTickets" collection
-        // This is a placeholder, you need to replace it with actual logic
-        val data = hashMapOf(
-            "source" to source,
-            "destination" to destination,
-            "amount" to amount,
-            "dateTime" to Calendar.getInstance().time,  // Current date and time
-        )
-
-        inProcessTicketsCollectionRef.add(data)
-            .addOnSuccessListener {
-                // Handle success
-            }
-            .addOnFailureListener { e ->
-                // Handle failure
-            }
-    }
-
-
 }

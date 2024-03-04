@@ -14,7 +14,7 @@ class ViewStops : AppCompatActivity(), StopAdapter.OnItemClickListener {
     private lateinit var db: FirebaseFirestore
     private lateinit var adapter: StopAdapter
     private lateinit var list: MutableList<Modal>
-    private var isFromAddRoute: Boolean = false
+    private var isFromBuyTicket: Boolean = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -23,7 +23,7 @@ class ViewStops : AppCompatActivity(), StopAdapter.OnItemClickListener {
         recyclerView = findViewById(R.id.rvShowStops)
         db = FirebaseFirestore.getInstance()
 
-        isFromAddRoute = intent.getBooleanExtra("true", false)
+        isFromBuyTicket = intent.getBooleanExtra("true", false)
 
         recyclerView.setHasFixedSize(true)
         recyclerView.layoutManager = LinearLayoutManager(this)
@@ -73,9 +73,12 @@ class ViewStops : AppCompatActivity(), StopAdapter.OnItemClickListener {
     }
 
     override fun onItemClick(modal: Modal) {
-        if(isFromAddRoute){
-            val nameIntent: List<String> = listOf(modal.name.toString(), modal.lat.toString(), modal.long.toString(), modal.id.toString())
-            val resultIntent = intent.putStringArrayListExtra("selectedStop", ArrayList(nameIntent))
+        if(isFromBuyTicket){
+//            val nameIntent: List<String> = listOf(modal.name.toString(), modal.lat.toString(), modal.long.toString(), modal.id.toString())
+//            val resultIntent = intent.putStringArrayListExtra("selectedStop", ArrayList(nameIntent))
+
+            val stopName = modal.name.toString()
+            val resultIntent = intent.putExtra("stop_name", stopName)
             setResult(Activity.RESULT_OK, resultIntent)
             finish()
 

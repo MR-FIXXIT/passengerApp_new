@@ -180,6 +180,7 @@ class Otp: AppCompatActivity() {
     private fun sendToMain(){
         val intent = Intent(this@Otp, Home::class.java)
         startActivity(intent)
+        finish()
     }
 
     val callbacks = object : PhoneAuthProvider.OnVerificationStateChangedCallbacks() {

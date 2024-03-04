@@ -73,6 +73,7 @@ class Map : AppCompatActivity(), OnMapReadyCallback,
     private lateinit var firestore: FirebaseFirestore
     private var previousLocation: LatLng? = null
     private var currentLocation: LatLng? = null
+    private var status: String? = "inactive"
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -110,7 +111,7 @@ class Map : AppCompatActivity(), OnMapReadyCallback,
         }
     }
 
-    private fun init(){
+    private fun init() {
         mapView = findViewById<View>(R.id.mapView) as MapView
         fabUserLocation = findViewById(R.id.fabUserLocation)
         fabLocationSearch = findViewById(R.id.fabLocationSearch)
@@ -138,9 +139,9 @@ class Map : AppCompatActivity(), OnMapReadyCallback,
         }
     }
 
-    private fun getBusLoc(){
+    private fun getBusLoc() {
         firestore.collection("userLocations").document("89")
-            .addSnapshotListener{ snapshot, exception ->
+            .addSnapshotListener { snapshot, exception ->
                 if (exception != null) {
                     Log.e("Firestore", "Listen failed", exception)
                     return@addSnapshotListener
@@ -149,69 +150,74 @@ class Map : AppCompatActivity(), OnMapReadyCallback,
                 if (snapshot != null && snapshot.exists()) {
                     val lat = snapshot.getDouble("latitude")
                     val long = snapshot.getDouble("longitude")
-                    val status = snapshot.getString("status")
+                    val newStatus = snapshot.getString("status")
 
-                    if(lat != null && long != null){
+                    if (lat != null && long != null) {
                         busLoc = LatLng(lat, long)
-                        updateMarkerPosition(busLoc, status)
+                        status = newStatus
+
+                        if (status == "active") {
+                            createOrUpdateBusMarker(busLoc!!)
+                        } else {
+                            hideBusMarker()
+                        }
+
                         Log.i("my_tag", "lat: $lat long: $long")
-                    }else {
+                        Log.i("my_tag", "status : $status")
+                    } else {
                         Log.e("Firestore", "One or both fields are missing")
+                        hideBusMarker()
                     }
                 } else {
                     Log.d("Firestore", "Current data: null")
+                    hideBusMarker()
                 }
             }
     }
 
-    private fun updateMarkerPosition(location: LatLng, status: String?) {
-        if(bus == null){
-            val busPosDrawable = ResourcesCompat.getDrawable(resources, R.drawable.bus_position_symbol, null)
-            val busPosIcon = IconFactory.getInstance(this).fromBitmap(BitmapUtils.getBitmapFromDrawable(busPosDrawable)!!)
-            bus = mapboxMap.addMarker(
-                MarkerOptions()
-                    .position(location)
-                    .icon(busPosIcon)
-                    .title("BUS")
-            )
 
+    private fun createOrUpdateBusMarker(location: LatLng) {
+        if (bus == null) {
+            createBusMarker(location)
         } else {
-            if(status == "inactive"){
-                hideBusMarker()
-                return
-            }
             updateMarkerPositionAnimation(location)
         }
     }
 
-    private fun hideBusMarker() {
-        mapboxMap.removeMarker(bus!!)
+    private fun createBusMarker(location: LatLng) {
+        val busPosDrawable =
+            ResourcesCompat.getDrawable(resources, R.drawable.bus_current_pos_icon, null)
+        val busPosIcon = IconFactory.getInstance(this)
+            .fromBitmap(BitmapUtils.getBitmapFromDrawable(busPosDrawable)!!)
+        bus = mapboxMap.addMarker(
+            MarkerOptions()
+                .position(location)
+                .icon(busPosIcon)
+                .title("BUS")
+        )
+    }
 
-        bus = null
+    private fun hideBusMarker() {
+        if(bus != null){
+            mapboxMap.removeMarker(bus!!)
+            bus = null
+        }
     }
 
 
     private fun updateMarkerPositionAnimation(newLocation: LatLng) {
-        Log.i("my_tag", "marker update fun called")
-
-        previousLocation = currentLocation
-        currentLocation = newLocation
-        Log.i("my_tag", "previous location: $previousLocation")
-        Log.i("my_tag", "current location: $currentLocation")
-
         previousLocation?.let { prevLocation ->
             val interpolator = LinearInterpolator()
             val valueAnimator = ValueAnimator.ofFloat(0f, 1f)
             valueAnimator.duration = 1000 // Animation duration in milliseconds
             valueAnimator.addUpdateListener { animator ->
                 val fraction = animator.animatedFraction
-                val lat = (currentLocation!!.latitude - prevLocation.latitude) * fraction + prevLocation.latitude
-                val lng = (currentLocation!!.longitude - prevLocation.longitude) * fraction + prevLocation.longitude
+                val lat = (newLocation.latitude - prevLocation.latitude) * fraction + prevLocation.latitude
+                val lng = (newLocation.longitude - prevLocation.longitude) * fraction + prevLocation.longitude
                 val animatedPosition = LatLng(lat, lng)
 
-                bus!!.position = animatedPosition
+                bus?.position = animatedPosition
                 mapboxMap.updateMarker(bus!!)
-
             }
             valueAnimator.interpolator = interpolator
             valueAnimator.start()
@@ -377,9 +383,9 @@ class Map : AppCompatActivity(), OnMapReadyCallback,
             )
 
             // Enable to make component visible
-            if (ActivityCompat.checkSelfPermission(this,Manifest.permission.ACCESS_FINE_LOCATION)
+            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
                 != PackageManager.PERMISSION_GRANTED &&
-                ActivityCompat.checkSelfPermission(this,Manifest.permission.ACCESS_COARSE_LOCATION)
+                ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION)
                 != PackageManager.PERMISSION_GRANTED
             ) {
                 // TODO: Consider calling
@@ -467,7 +473,5 @@ class Map : AppCompatActivity(), OnMapReadyCallback,
         private const val ICON_SOURCE_ID = "icon-source-id"
         private const val RED_PIN_ICON_ID = "red-pin-icon-id"
     }
-    data class Bus(val id: String, val lat: Double, val lng: Double)
-
 }
 

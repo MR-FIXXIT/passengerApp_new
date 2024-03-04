@@ -25,17 +25,11 @@
             android:textStyle="bold" />
 
     </LinearLayout>
-
+    
     <LinearLayout
         android:id="@+id/ll1"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        app:layout_constraintBottom_toTopOf="@+id/linearLayout2"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.5"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/linearLayout3"
-        android:gravity="center">
+        android:layout_height="wrap_content">
 
         <ImageView
             android:id="@+id/ivQR"
@@ -49,14 +43,15 @@
     </LinearLayout>
 
 
+
     <LinearLayout
         android:id="@+id/linearLayout2"
         android:layout_width="match_parent"
         android:layout_height="246dp"
-        android:layout_marginBottom="32dp"
+        android:layout_marginBottom="88dp"
         app:layout_constraintBottom_toTopOf="@+id/btnPay"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintHorizontal_bias="0.6"
         app:layout_constraintStart_toStartOf="parent">
 
         <GridView
@@ -69,6 +64,7 @@
             android:verticalSpacing="16dp"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
+
 
     </LinearLayout>
 
